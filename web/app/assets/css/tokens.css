@@ -1,0 +1,148 @@
+/*
+  Design tokens — single source of truth.
+  Theory: docs/DESIGN_SYSTEM.md
+  Anti-cliche: docs/AI_VISUAL_CLICHES.md
+*/
+
+:root {
+  color-scheme: dark;
+
+  /* —— Spacing scale (base unit 0.25rem = 4px) —— */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* —— Radii (prefer small; avoid pills) —— */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+
+  /* —— Typography —— */
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", Candara, system-ui, sans-serif;
+  --font-display: Constantia, Cambria, "Palatino Linotype", Georgia, serif;
+  --font-mono: "Cascadia Mono", Consolas, "Segoe UI Mono", ui-monospace, monospace;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.75rem;
+  --text-md: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1.05rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.55rem;
+  --text-countdown: 1.85rem;
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.25;
+  --leading-normal: 1.45;
+  --tracking-tight: -0.02em;
+  --tracking-label: 0.08em;
+
+  /* —— Surfaces (keyed to rift plate #111018) —— */
+  --color-bg: #111018;
+  --color-bg-deep: #111018;
+  --color-bg-top: #16141f;
+  --color-bg-elev: #1c1a26;
+  --color-bg-card: #191722;
+  --color-bg-card-hover: #201e2c;
+  --color-bg-art: #0d0c12;
+  --color-bg-fallback-a: #2a2836;
+  --color-bg-fallback-b: #16141f;
+  --color-bg-toast: #1e1c28;
+  --color-line: #2e2c3a;
+  --color-line-soft: #24222e;
+  --color-line-toast: #3c3a4a;
+  --color-scrim: rgba(10, 9, 14, 0.8);
+  --color-wash: rgba(255, 255, 255, 0.03);
+  --color-wash-strong: rgba(255, 255, 255, 0.05);
+  --color-ghost-hover: rgba(255, 255, 255, 0.04);
+  --color-ink-soft: rgba(0, 0, 0, 0.18);
+  --color-ink-panel: rgba(0, 0, 0, 0.28);
+  --color-empty: rgba(0, 0, 0, 0.2);
+
+  /* —— Text (cool, same temperature) —— */
+  --color-text: #e4e2ec;
+  --color-text-muted: #9a96a8;
+  --color-text-faint: #6c6878;
+
+  /* —— Semantic status (primary cooled for #111018 plate) —— */
+  --color-active: #3a8f88;
+  --color-active-bright: #3a8f88;
+  --color-active-soft: rgba(58, 143, 136, 0.14);
+  --color-active-ink: #031211;
+  --color-active-text: #84c8bf;
+  --color-active-line: #2a6560;
+
+  --color-urgent: #e08a45;
+  --color-urgent-soft: rgba(224, 138, 69, 0.12);
+  --color-urgent-text: #f0c49a;
+  --color-urgent-line: #8a5528;
+
+  --color-ready: #d4a93a;
+  --color-ready-bright: #d4a93a;
+  --color-ready-hover: #e0b84a;
+  --color-ready-soft: rgba(212, 169, 58, 0.12);
+  --color-ready-text: #f0d78a;
+  --color-ready-line: #7a6420;
+  --color-ready-ink: #1f1704;
+
+  --color-warn: #c9922e;
+  --color-danger: #c45a5a;
+  --color-danger-soft: rgba(196, 90, 90, 0.12);
+  --color-danger-soft-hover: rgba(196, 90, 90, 0.2);
+  --color-danger-soft-active: rgba(196, 90, 90, 0.28);
+  --color-danger-text: #f0b4b4;
+  --color-danger-text-hover: #ffc9c9;
+  --color-danger-line: #5a3030;
+
+  /* —— Elevation (flat; no multi-glow) —— */
+  --shadow-card: none;
+  --shadow-toast: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 0.75rem 2rem rgba(0, 0, 0, 0.5);
+
+  /* —— Interaction —— */
+  --color-btn-primary-hover: #449a93;
+  --color-btn-primary-active: #2d736d;
+  --color-btn-default-hover-border: #3c3a4a;
+  --color-btn-default-active-bg: #16141f;
+  --shadow-focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-active-line);
+  --shadow-primary-hover: none;
+  --press-offset: 1px;
+
+  /* —— Layout —— */
+  --card-art-width: 9.5rem;
+  --card-min-height: 9.5rem;
+  --grid-card-min: 22.5rem;
+
+  /* —— Compat aliases —— */
+  --bg: var(--color-bg);
+  --bg-elev: var(--color-bg-elev);
+  --bg-card: var(--color-bg-card);
+  --bg-card-hover: var(--color-bg-card-hover);
+  --line: var(--color-line);
+  --line-soft: var(--color-line-soft);
+  --text: var(--color-text);
+  --muted: var(--color-text-muted);
+  --faint: var(--color-text-faint);
+  --accent: var(--color-active);
+  --accent-soft: var(--color-active-soft);
+  --accent-ink: var(--color-active-ink);
+  --warn: var(--color-warn);
+  --warn-soft: rgba(201, 146, 46, 0.14);
+  --danger: var(--color-danger);
+  --danger-soft: var(--color-danger-soft);
+  --ready: var(--color-ready);
+  --ready-soft: var(--color-ready-soft);
+  --urgent: var(--color-urgent);
+  --urgent-soft: var(--color-urgent-soft);
+  --radius: var(--radius-lg);
+  --font: var(--font-sans);
+  --display: var(--font-display);
+  --mono: var(--font-mono);
+}

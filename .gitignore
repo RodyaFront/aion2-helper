@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+
+# Root / PyInstaller artifacts
+build/
+dist/
+*.manifest
+
+# Web / Nuxt / Electron (also mirrored in web/.gitignore)
+web/node_modules/
+web/.nuxt/
+web/.output/
+web/.data/
+web/.nitro/
+web/.cache/
+web/dist/
+web/release/
+web/tmp-scrape/
+web/.env
+web/.env.*
+!web/.env.example
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.fleet/

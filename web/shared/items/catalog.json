@@ -1,0 +1,46 @@
+{
+  "scrapedAt": "2026-10-13T19:11:18.337Z",
+  "source": "dbaion2.ru",
+  "attribution": "Item/drop/spawn data from dbaion2.ru (fan client dump). AION 2 © NCSOFT.",
+  "items": [
+    {
+      "id": "raw_leather",
+      "itemId": "610530011",
+      "nameEn": "Raw Leather",
+      "nameRu": "Необработанная кожа",
+      "category": "crafting_material",
+      "grade": "Common",
+      "icon": "/items/raw_leather.webp",
+      "sourceUrl": "https://dbaion2.ru/en/items/610530011/",
+      "dropSourceCount": 66,
+      "verteronSpawnCount": 2344,
+      "hasVerteronMap": true
+    },
+    {
+      "id": "fresh_raw_meat",
+      "itemId": "610531001",
+      "nameEn": "Fresh Raw Meat",
+      "nameRu": "Свежее сырое мясо",
+      "category": "crafting_material",
+      "grade": "Common",
+      "icon": "/items/fresh_raw_meat.webp",
+      "sourceUrl": "https://dbaion2.ru/en/items/610531001/",
+      "dropSourceCount": 53,
+      "verteronSpawnCount": 2075,
+      "hasVerteronMap": true
+    },
+    {
+      "id": "refining_stone",
+      "itemId": "610530001",
+      "nameEn": "Refining Stone",
+      "nameRu": "Плавильный камень",
+      "category": "crafting_material",
+      "grade": "Common",
+      "icon": "/items/refining_stone.webp",
+      "sourceUrl": "https://dbaion2.ru/en/items/610530001/",
+      "dropSourceCount": 286,
+      "verteronSpawnCount": 8052,
+      "hasVerteronMap": true
+    }
+  ]
+}

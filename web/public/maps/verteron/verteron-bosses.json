@@ -1,0 +1,970 @@
+{
+  "region": "verteron",
+  "faction": "elyos",
+  "scrapedAt": "2026-10-13T13:03:52.073Z",
+  "sources": [
+    {
+      "id": "aion2kina-map-data",
+      "url": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "note": "Full marker dump; subtype collection/boss = field/world bosses"
+    },
+    {
+      "id": "aion2kina-tiles",
+      "url": "https://www.aion2kina.com/de/tools/map/verteron/",
+      "note": "WebP tiles from map-runtime releases"
+    }
+  ],
+  "map": {
+    "width": 8192,
+    "height": 8192,
+    "tileUrlTemplate": "/maps/verteron/tiles/{z}/{x}/{y}.webp",
+    "overview": "/maps/verteron/overview.webp",
+    "minZoom": 0,
+    "maxZoom": 4,
+    "tileSize": 512,
+    "attribution": "Map data/tiles from aion2kina.com (fan resource). AION 2 © NCSOFT.",
+    "tiles": [
+      {
+        "z": 0,
+        "x": 0,
+        "y": 0,
+        "path": "tiles/0/0/0.webp",
+        "bytes": 58856
+      },
+      {
+        "z": 1,
+        "x": 0,
+        "y": 0,
+        "path": "tiles/1/0/0.webp",
+        "bytes": 49098
+      },
+      {
+        "z": 1,
+        "x": 0,
+        "y": 1,
+        "path": "tiles/1/0/1.webp",
+        "bytes": 54604
+      },
+      {
+        "z": 1,
+        "x": 1,
+        "y": 0,
+        "path": "tiles/1/1/0.webp",
+        "bytes": 51818
+      },
+      {
+        "z": 1,
+        "x": 1,
+        "y": 1,
+        "path": "tiles/1/1/1.webp",
+        "bytes": 61278
+      },
+      {
+        "z": 2,
+        "x": 0,
+        "y": 0,
+        "path": "tiles/2/0/0.webp",
+        "bytes": 36598
+      },
+      {
+        "z": 2,
+        "x": 0,
+        "y": 1,
+        "path": "tiles/2/0/1.webp",
+        "bytes": 28626
+      },
+      {
+        "z": 2,
+        "x": 0,
+        "y": 2,
+        "path": "tiles/2/0/2.webp",
+        "bytes": 30604
+      },
+      {
+        "z": 2,
+        "x": 0,
+        "y": 3,
+        "path": "tiles/2/0/3.webp",
+        "bytes": 36166
+      },
+      {
+        "z": 2,
+        "x": 1,
+        "y": 0,
+        "path": "tiles/2/1/0.webp",
+        "bytes": 27500
+      },
+      {
+        "z": 2,
+        "x": 1,
+        "y": 1,
+        "path": "tiles/2/1/1.webp",
+        "bytes": 79712
+      },
+      {
+        "z": 2,
+        "x": 1,
+        "y": 2,
+        "path": "tiles/2/1/2.webp",
+        "bytes": 84658
+      },
+      {
+        "z": 2,
+        "x": 1,
+        "y": 3,
+        "path": "tiles/2/1/3.webp",
+        "bytes": 31082
+      },
+      {
+        "z": 2,
+        "x": 2,
+        "y": 0,
+        "path": "tiles/2/2/0.webp",
+        "bytes": 31896
+      },
+      {
+        "z": 2,
+        "x": 2,
+        "y": 1,
+        "path": "tiles/2/2/1.webp",
+        "bytes": 97810
+      },
+      {
+        "z": 2,
+        "x": 2,
+        "y": 2,
+        "path": "tiles/2/2/2.webp",
+        "bytes": 103266
+      },
+      {
+        "z": 2,
+        "x": 2,
+        "y": 3,
+        "path": "tiles/2/2/3.webp",
+        "bytes": 35448
+      },
+      {
+        "z": 2,
+        "x": 3,
+        "y": 0,
+        "path": "tiles/2/3/0.webp",
+        "bytes": 21134
+      },
+      {
+        "z": 2,
+        "x": 3,
+        "y": 1,
+        "path": "tiles/2/3/1.webp",
+        "bytes": 33318
+      },
+      {
+        "z": 2,
+        "x": 3,
+        "y": 2,
+        "path": "tiles/2/3/2.webp",
+        "bytes": 35814
+      },
+      {
+        "z": 2,
+        "x": 3,
+        "y": 3,
+        "path": "tiles/2/3/3.webp",
+        "bytes": 34140
+      },
+      {
+        "z": 3,
+        "x": 0,
+        "y": 0,
+        "path": "tiles/3/0/0.webp",
+        "bytes": 24924
+      },
+      {
+        "z": 3,
+        "x": 0,
+        "y": 1,
+        "path": "tiles/3/0/1.webp",
+        "bytes": 32642
+      },
+      {
+        "z": 3,
+        "x": 0,
+        "y": 2,
+        "path": "tiles/3/0/2.webp",
+        "bytes": 17828
+      },
+      {
+        "z": 3,
+        "x": 0,
+        "y": 3,
+        "path": "tiles/3/0/3.webp",
+        "bytes": 17112
+      },
+      {
+        "z": 3,
+        "x": 0,
+        "y": 4,
+        "path": "tiles/3/0/4.webp",
+        "bytes": 16718
+      },
+      {
+        "z": 3,
+        "x": 0,
+        "y": 5,
+        "path": "tiles/3/0/5.webp",
+        "bytes": 19504
+      },
+      {
+        "z": 3,
+        "x": 0,
+        "y": 6,
+        "path": "tiles/3/0/6.webp",
+        "bytes": 19838
+      },
+      {
+        "z": 3,
+        "x": 0,
+        "y": 7,
+        "path": "tiles/3/0/7.webp",
+        "bytes": 16322
+      },
+      {
+        "z": 3,
+        "x": 1,
+        "y": 0,
+        "path": "tiles/3/1/0.webp",
+        "bytes": 23110
+      },
+      {
+        "z": 3,
+        "x": 1,
+        "y": 1,
+        "path": "tiles/3/1/1.webp",
+        "bytes": 34548
+      },
+      {
+        "z": 3,
+        "x": 1,
+        "y": 2,
+        "path": "tiles/3/1/2.webp",
+        "bytes": 23578
+      },
+      {
+        "z": 3,
+        "x": 1,
+        "y": 3,
+        "path": "tiles/3/1/3.webp",
+        "bytes": 29896
+      },
+      {
+        "z": 3,
+        "x": 1,
+        "y": 4,
+        "path": "tiles/3/1/4.webp",
+        "bytes": 37426
+      },
+      {
+        "z": 3,
+        "x": 1,
+        "y": 5,
+        "path": "tiles/3/1/5.webp",
+        "bytes": 23788
+      },
+      {
+        "z": 3,
+        "x": 1,
+        "y": 6,
+        "path": "tiles/3/1/6.webp",
+        "bytes": 70060
+      },
+      {
+        "z": 3,
+        "x": 1,
+        "y": 7,
+        "path": "tiles/3/1/7.webp",
+        "bytes": 19552
+      },
+      {
+        "z": 3,
+        "x": 2,
+        "y": 0,
+        "path": "tiles/3/2/0.webp",
+        "bytes": 19822
+      },
+      {
+        "z": 3,
+        "x": 2,
+        "y": 1,
+        "path": "tiles/3/2/1.webp",
+        "bytes": 25216
+      },
+      {
+        "z": 3,
+        "x": 2,
+        "y": 2,
+        "path": "tiles/3/2/2.webp",
+        "bytes": 42532
+      },
+      {
+        "z": 3,
+        "x": 2,
+        "y": 3,
+        "path": "tiles/3/2/3.webp",
+        "bytes": 62978
+      },
+      {
+        "z": 3,
+        "x": 2,
+        "y": 4,
+        "path": "tiles/3/2/4.webp",
+        "bytes": 53286
+      },
+      {
+        "z": 3,
+        "x": 2,
+        "y": 5,
+        "path": "tiles/3/2/5.webp",
+        "bytes": 31640
+      },
+      {
+        "z": 3,
+        "x": 2,
+        "y": 6,
+        "path": "tiles/3/2/6.webp",
+        "bytes": 37836
+      },
+      {
+        "z": 3,
+        "x": 2,
+        "y": 7,
+        "path": "tiles/3/2/7.webp",
+        "bytes": 20590
+      },
+      {
+        "z": 3,
+        "x": 3,
+        "y": 0,
+        "path": "tiles/3/3/0.webp",
+        "bytes": 18700
+      },
+      {
+        "z": 3,
+        "x": 3,
+        "y": 1,
+        "path": "tiles/3/3/1.webp",
+        "bytes": 23842
+      },
+      {
+        "z": 3,
+        "x": 3,
+        "y": 2,
+        "path": "tiles/3/3/2.webp",
+        "bytes": 46286
+      },
+      {
+        "z": 3,
+        "x": 3,
+        "y": 3,
+        "path": "tiles/3/3/3.webp",
+        "bytes": 101402
+      },
+      {
+        "z": 3,
+        "x": 3,
+        "y": 4,
+        "path": "tiles/3/3/4.webp",
+        "bytes": 109990
+      },
+      {
+        "z": 3,
+        "x": 3,
+        "y": 5,
+        "path": "tiles/3/3/5.webp",
+        "bytes": 82550
+      },
+      {
+        "z": 3,
+        "x": 3,
+        "y": 6,
+        "path": "tiles/3/3/6.webp",
+        "bytes": 24192
+      },
+      {
+        "z": 3,
+        "x": 3,
+        "y": 7,
+        "path": "tiles/3/3/7.webp",
+        "bytes": 18472
+      },
+      {
+        "z": 3,
+        "x": 4,
+        "y": 0,
+        "path": "tiles/3/4/0.webp",
+        "bytes": 18814
+      },
+      {
+        "z": 3,
+        "x": 4,
+        "y": 1,
+        "path": "tiles/3/4/1.webp",
+        "bytes": 31596
+      },
+      {
+        "z": 3,
+        "x": 4,
+        "y": 2,
+        "path": "tiles/3/4/2.webp",
+        "bytes": 68900
+      },
+      {
+        "z": 3,
+        "x": 4,
+        "y": 3,
+        "path": "tiles/3/4/3.webp",
+        "bytes": 99552
+      },
+      {
+        "z": 3,
+        "x": 4,
+        "y": 4,
+        "path": "tiles/3/4/4.webp",
+        "bytes": 98248
+      },
+      {
+        "z": 3,
+        "x": 4,
+        "y": 5,
+        "path": "tiles/3/4/5.webp",
+        "bytes": 93682
+      },
+      {
+        "z": 3,
+        "x": 4,
+        "y": 6,
+        "path": "tiles/3/4/6.webp",
+        "bytes": 33134
+      },
+      {
+        "z": 3,
+        "x": 4,
+        "y": 7,
+        "path": "tiles/3/4/7.webp",
+        "bytes": 20532
+      },
+      {
+        "z": 3,
+        "x": 5,
+        "y": 0,
+        "path": "tiles/3/5/0.webp",
+        "bytes": 18916
+      },
+      {
+        "z": 3,
+        "x": 5,
+        "y": 1,
+        "path": "tiles/3/5/1.webp",
+        "bytes": 29870
+      },
+      {
+        "z": 3,
+        "x": 5,
+        "y": 2,
+        "path": "tiles/3/5/2.webp",
+        "bytes": 71172
+      },
+      {
+        "z": 3,
+        "x": 5,
+        "y": 3,
+        "path": "tiles/3/5/3.webp",
+        "bytes": 92218
+      },
+      {
+        "z": 3,
+        "x": 5,
+        "y": 4,
+        "path": "tiles/3/5/4.webp",
+        "bytes": 92584
+      },
+      {
+        "z": 3,
+        "x": 5,
+        "y": 5,
+        "path": "tiles/3/5/5.webp",
+        "bytes": 67478
+      },
+      {
+        "z": 3,
+        "x": 5,
+        "y": 6,
+        "path": "tiles/3/5/6.webp",
+        "bytes": 35512
+      },
+      {
+        "z": 3,
+        "x": 5,
+        "y": 7,
+        "path": "tiles/3/5/7.webp",
+        "bytes": 23106
+      },
+      {
+        "z": 3,
+        "x": 6,
+        "y": 0,
+        "path": "tiles/3/6/0.webp",
+        "bytes": 17162
+      },
+      {
+        "z": 3,
+        "x": 6,
+        "y": 1,
+        "path": "tiles/3/6/1.webp",
+        "bytes": 29944
+      },
+      {
+        "z": 3,
+        "x": 6,
+        "y": 2,
+        "path": "tiles/3/6/2.webp",
+        "bytes": 28256
+      },
+      {
+        "z": 3,
+        "x": 6,
+        "y": 3,
+        "path": "tiles/3/6/3.webp",
+        "bytes": 44168
+      },
+      {
+        "z": 3,
+        "x": 6,
+        "y": 4,
+        "path": "tiles/3/6/4.webp",
+        "bytes": 29018
+      },
+      {
+        "z": 3,
+        "x": 6,
+        "y": 5,
+        "path": "tiles/3/6/5.webp",
+        "bytes": 36850
+      },
+      {
+        "z": 3,
+        "x": 6,
+        "y": 6,
+        "path": "tiles/3/6/6.webp",
+        "bytes": 43458
+      },
+      {
+        "z": 3,
+        "x": 6,
+        "y": 7,
+        "path": "tiles/3/6/7.webp",
+        "bytes": 24440
+      },
+      {
+        "z": 3,
+        "x": 7,
+        "y": 0,
+        "path": "tiles/3/7/0.webp",
+        "bytes": 10990
+      },
+      {
+        "z": 3,
+        "x": 7,
+        "y": 1,
+        "path": "tiles/3/7/1.webp",
+        "bytes": 13330
+      },
+      {
+        "z": 3,
+        "x": 7,
+        "y": 2,
+        "path": "tiles/3/7/2.webp",
+        "bytes": 14522
+      },
+      {
+        "z": 3,
+        "x": 7,
+        "y": 3,
+        "path": "tiles/3/7/3.webp",
+        "bytes": 17710
+      },
+      {
+        "z": 3,
+        "x": 7,
+        "y": 4,
+        "path": "tiles/3/7/4.webp",
+        "bytes": 18126
+      },
+      {
+        "z": 3,
+        "x": 7,
+        "y": 5,
+        "path": "tiles/3/7/5.webp",
+        "bytes": 30176
+      },
+      {
+        "z": 3,
+        "x": 7,
+        "y": 6,
+        "path": "tiles/3/7/6.webp",
+        "bytes": 26732
+      },
+      {
+        "z": 3,
+        "x": 7,
+        "y": 7,
+        "path": "tiles/3/7/7.webp",
+        "bytes": 14718
+      }
+    ]
+  },
+  "boundsFromBosses": {
+    "minX": 1889,
+    "maxX": 5692,
+    "minY": 1647,
+    "maxY": 5407
+  },
+  "bosses": [
+    {
+      "id": "black_tentacle_lawa",
+      "name": "Black Tentacle Lawa",
+      "nameSource": "黑色触手拉瓦",
+      "x": 5084,
+      "y": 3352,
+      "mapX": 5084,
+      "mapY": 4840,
+      "description": "刷新间隔12小时",
+      "markerId": "a842db37-f872-456d-a42f-50cdcc4924f6",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "bloodfang_pnyn",
+      "name": "Bloodfang Pnyn",
+      "nameSource": "血獠牙普宁",
+      "x": 3509,
+      "y": 3531,
+      "mapX": 3509,
+      "mapY": 4661,
+      "description": "刷新间隔6小时",
+      "markerId": "08dc92f7-00f2-4297-a5f8-c8c33174dbdd",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "blooming_korin",
+      "name": "Blooming Korin",
+      "nameSource": "盛开的柯林",
+      "x": 3745,
+      "y": 4464,
+      "mapX": 3745,
+      "mapY": 3728,
+      "description": "刷新间隔2小时",
+      "markerId": "fbc51970-6cf5-4e4e-8ca5-1a65d88f9ffa",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "bodyguard_teegant",
+      "name": "Bodyguard Teegant",
+      "nameSource": "护卫兵提甘特",
+      "x": 4283,
+      "y": 4098,
+      "mapX": 4283,
+      "mapY": 4094,
+      "description": "刷新间隔3小时",
+      "markerId": "1e2107f3-8424-4467-b485-b10008f1cff4",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "centurion_demiros",
+      "name": "Centurion Demiros",
+      "nameSource": "百夫长戴米罗斯",
+      "x": 5349,
+      "y": 3983,
+      "mapX": 5349,
+      "mapY": 4209,
+      "description": "刷新间隔8小时",
+      "markerId": "fdc029f7-5684-4e2a-af3c-f08325bb8090",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "chaser_taulo",
+      "name": "Chaser Taulo",
+      "nameSource": "追击者塔兀罗",
+      "x": 3457,
+      "y": 2905,
+      "mapX": 3457,
+      "mapY": 5287,
+      "description": "刷新间隔4小时",
+      "markerId": "f3636187-739e-40dd-8f09-b07c52fed797",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "divine_ansas",
+      "name": "Divine Ansas",
+      "nameSource": "神圣的安萨斯",
+      "x": 5533,
+      "y": 3740,
+      "mapX": 5533,
+      "mapY": 4452,
+      "description": "刷新间隔12小时",
+      "markerId": "ffb267ac-77d6-4ab1-9304-5e98b0fd9cd8",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "eternal_gartua",
+      "name": "Eternal Gartua",
+      "nameSource": "永恒卡尔吐亚",
+      "x": 1889,
+      "y": 1647,
+      "mapX": 1889,
+      "mapY": 6545,
+      "description": "刷新间隔24小时",
+      "markerId": "9d0b7986-4c60-46a8-a206-9012daf2ad4f",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "forest_aullamu",
+      "name": "Forest Warrior Aullamu",
+      "nameSource": "森林战士乌刺姆",
+      "x": 3836,
+      "y": 2770,
+      "mapX": 3836,
+      "mapY": 5422,
+      "description": "刷新间隔8小时",
+      "markerId": "66e95ecb-7a44-4196-aace-72ab5cb33237",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "furious_saursus",
+      "name": "Furious Saursus",
+      "nameSource": "愤怒的萨吕",
+      "x": 3517,
+      "y": 3265,
+      "mapX": 3517,
+      "mapY": 4927,
+      "description": "刷新间隔6小时",
+      "markerId": "ef19dce1-53ea-4c4c-b9e7-204c34e3295f",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "harvest_moshav",
+      "name": "Harvest Manager Moshav",
+      "nameSource": "收获管理者莫夏夫",
+      "x": 5273,
+      "y": 5066,
+      "mapX": 5273,
+      "mapY": 3126,
+      "description": "刷新间隔6小时",
+      "markerId": "447366c3-3ab2-4ffc-8132-1374ae30c5f3",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "heretic_layla",
+      "name": "Heretic Layla",
+      "nameSource": "叛教者雷拉",
+      "x": 4284,
+      "y": 3142,
+      "mapX": 4284,
+      "mapY": 5050,
+      "description": "刷新间隔6小时",
+      "markerId": "463b28ab-1c31-48d8-a4d8-920b0e9f016d",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "high_commander_lagta",
+      "name": "High Commander Lagta",
+      "nameSource": "军团长拉格塔",
+      "x": 4826,
+      "y": 4767,
+      "mapX": 4826,
+      "mapY": 3425,
+      "description": "刷新间隔24小时",
+      "markerId": "9a41dba0-6e80-483a-b982-53148f0b50c3",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "kernon_west",
+      "name": "Kernon of the West",
+      "nameSource": "西侧涅凯尔",
+      "x": 3149,
+      "y": 4535,
+      "mapX": 3149,
+      "mapY": 3657,
+      "description": "刷新间隔1小时",
+      "markerId": "66808ee8-580a-4218-ba6d-51b28e0c3e59",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "kusan_mad",
+      "name": "Kusan the Mad Gladiator",
+      "nameSource": "狂斗士库森",
+      "x": 3910,
+      "y": 4200,
+      "mapX": 3910,
+      "mapY": 3992,
+      "description": "刷新间隔4小时",
+      "markerId": "2e339377-9228-445e-a0dd-5dc43cb08c72",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "neikel_east",
+      "name": "Neikel of the East",
+      "nameSource": "东侧涅凯尔",
+      "x": 3504,
+      "y": 4984,
+      "mapX": 3504,
+      "mapY": 3208,
+      "description": "刷新间隔1小时",
+      "markerId": "99fe42ad-bd58-4ab5-affd-1423ce7577ca",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "phantasm_kasia",
+      "name": "Phantasm Kasia",
+      "nameSource": "幻梦卡西亚",
+      "x": 4940,
+      "y": 2302,
+      "mapX": 4940,
+      "mapY": 5890,
+      "description": "刷新间隔12小时",
+      "markerId": "bcfb2b49-9436-4df0-a288-74a2cc2365e3",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "researcher_setram",
+      "name": "Researcher Setram",
+      "nameSource": "研究官塞特兰",
+      "x": 5692,
+      "y": 5407,
+      "mapX": 5692,
+      "mapY": 2785,
+      "description": "刷新间隔12小时",
+      "markerId": "0546b29f-c926-4ff8-aea7-4d87124d9591",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "ritualist_garshim",
+      "name": "Ritualist Garshim",
+      "nameSource": "祭司长加尔新",
+      "x": 3827,
+      "y": 3896,
+      "mapX": 3827,
+      "mapY": 4296,
+      "description": "刷新间隔4小时",
+      "markerId": "45b4c19a-31ee-4688-b630-85c89e96a4a9",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "rotten_kutar",
+      "name": "Rotten Kutar",
+      "nameSource": "腐朽的库塔尔",
+      "x": 3845,
+      "y": 4914,
+      "mapX": 3845,
+      "mapY": 3278,
+      "description": "刷新间隔1小时",
+      "markerId": "036cccc1-c118-4b73-8262-9332f7a9f2a7",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "scholar_aulla",
+      "name": "Scholar Aulla",
+      "nameSource": "学者拉兀拉",
+      "x": 3632,
+      "y": 3095,
+      "mapX": 3632,
+      "mapY": 5097,
+      "description": "刷新间隔4小时",
+      "markerId": "58f8c41e-965f-44d4-9173-09c4843aa9e1",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "sentinel_knash",
+      "name": "Sentinel K'nash",
+      "nameSource": "监视兵器克纳许",
+      "x": 5409,
+      "y": 4880,
+      "mapX": 5409,
+      "mapY": 3312,
+      "description": "刷新间隔8小时",
+      "markerId": "b682f0f5-c464-46fb-9e03-d64194e33682",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "silent_dartan",
+      "name": "Silent Dartan",
+      "nameSource": "沉默塔尔坦",
+      "x": 4240,
+      "y": 2673,
+      "mapX": 4240,
+      "mapY": 5519,
+      "description": "刷新间隔12小时",
+      "markerId": "6118e3ed-129f-40a8-8b39-6a0ea11f83b8",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    },
+    {
+      "id": "soul_kashapa",
+      "name": "Soul Ruler Kashapa",
+      "nameSource": "灵魂支配者卡沙帕",
+      "x": 5479,
+      "y": 3372,
+      "mapX": 5479,
+      "mapY": 4820,
+      "description": "刷新间隔12小时",
+      "markerId": "1419a7c8-8f43-489a-a933-7aebfd2809b8",
+      "source": "aion2kina-map-data",
+      "sourceUrl": "https://www.aion2kina.com/data/aion2-map-data.json",
+      "coordSystem": "sourceXY=quellkoordinaten; mapXY=tile-pixel-8192"
+    }
+  ],
+  "missing": [],
+  "unmatched": []
+}

@@ -1,0 +1,41 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Electron packaged builds
+release/
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Generated sound scratch (final OGG lives in public/sounds)
+scripts/.sound-tmp
+scripts/.sfx-src
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Piper TTS binary + ONNX voices (npm run piper:fetch)
+vendor/piper/bin/
+vendor/piper/voices/
+vendor/piper/*.zip
+vendor/piper/*.part
+vendor/piper/voices.json
+
+# Temporary scrape downloads
+tmp-scrape/

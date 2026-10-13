@@ -1,0 +1,95 @@
+{
+  "name": "aion-boss-tracker",
+  "productName": "AionBossTracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "description": "Локальный трекер полевых боссов AION 2 (Verteron / Lamuatan)",
+  "author": "Rodion",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "electron:dev": "concurrently -k \"nuxt dev --host 127.0.0.1 --port 3000\" \"wait-on http://127.0.0.1:3000 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:3000 electron .\"",
+    "electron:build": "npm run piper:fetch && nuxt generate && electron-builder --win portable dir && node scripts/copy-dist.mjs",
+    "piper:fetch": "node scripts/fetch-piper.mjs",
+    "map:scrape": "node scripts/scrape-verteron-map.mjs && node scripts/build-verteron-coords.mjs",
+    "map:coords": "node scripts/build-verteron-coords.mjs",
+    "items:scrape": "node scripts/scrape-dbaion2-items.mjs && node scripts/merge-item-page-verteron.mjs",
+    "fetch:images": "python ../scripts/fetch-boss-images.py",
+    "sounds:generate": "python scripts/generate-alert-sounds.py",
+    "sounds:validate": "python scripts/validate-alert-sounds.py",
+    "sounds": "npm run sounds:generate && npm run sounds:validate",
+    "icons:generate": "python scripts/generate-app-icon.py"
+  },
+  "devDependencies": {
+    "@lucide/vue": "^1.55.0",
+    "@pinia/nuxt": "^1.0.2",
+    "@types/node": "^26.6.5",
+    "concurrently": "^10.0.6",
+    "cross-env": "^10.1.0",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
+    "nuxt": "^4.6.1",
+    "pinia": "^4.0.3",
+    "typescript": "^7.0.2",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1",
+    "wait-on": "^9.5.1"
+  },
+  "build": {
+    "appId": "com.aion.bosstracker",
+    "productName": "AionBossTracker",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      ".output/public/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "vendor/piper",
+        "to": "piper",
+        "filter": [
+          "**/*",
+          "!**/*.zip",
+          "!**/*.part"
+        ]
+      },
+      {
+        "from": "electron/icons",
+        "to": "icons",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asar": true,
+    "compression": "store",
+    "win": {
+      "icon": "electron/icons/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "AionBossTracker.exe"
+    },
+    "portable": {
+      "unpackDirName": "AionBossTrackerPortable"
+    }
+  }
+}

@@ -71,6 +71,16 @@
   --color-text-muted: #9a96a8;
   --color-text-faint: #6c6878;
 
+  /* —— Item rarity (AION 2 client colors; not dbaion2 CSS tokens) ——
+     Common grey/white → Rare green → Epic blue → Unique yellow → Heroic orange.
+     Portal DBs often swap Epic/Heroic hexes — we follow in-game grade names. */
+  --grade-common: #cdcdcd;
+  --grade-rare: #3dde5a;
+  --grade-epic: #4aa3ff;
+  --grade-unique: #ffd24a;
+  --grade-heroic: #ff8a2b;
+  --grade-special: #2ec4b6;
+
   /* —— Semantic status (primary cooled for #111018 plate) —— */
   --color-active: #3a8f88;
   --color-active-bright: #3a8f88;
@@ -101,10 +111,22 @@
   --color-danger-text-hover: #ffc9c9;
   --color-danger-line: #5a3030;
 
+  /* —— Scrollbar (thin, low-contrast) —— */
+  --scrollbar-size: 0.375rem;
+  --scrollbar-radius: 999px;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: color-mix(in srgb, var(--color-text-faint) 45%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--color-text-muted) 70%, transparent);
+
   /* —— Elevation (flat; no multi-glow) —— */
   --shadow-card: none;
   --shadow-toast: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.45);
   --shadow-modal: 0 0.75rem 2rem rgba(0, 0, 0, 0.5);
+  --shadow-tooltip: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.45);
+
+  /* —— Stacking —— */
+  /* Modals use 50 + stackDepth; tooltips must sit above open dialogs. */
+  --z-tooltip: 100;
 
   /* —— Interaction —— */
   --color-btn-primary-hover: #449a93;
@@ -116,6 +138,7 @@
   --press-offset: 1px;
 
   /* —— Layout —— */
+  --sidebar-width: 14.5rem;
   --card-art-width: 9.5rem;
   --card-min-height: 9.5rem;
   --grid-card-min: 22.5rem;

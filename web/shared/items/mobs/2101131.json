@@ -1,0 +1,172 @@
+{
+  "mobId": "2101131",
+  "scrapedAt": "2026-10-13T20:19:03.461Z",
+  "source": "dbaion2.ru",
+  "drops": [
+    {
+      "itemId": "533700374",
+      "nameEn": "Lagta's Loot Chest (Bound)",
+      "icon": "Icon_Item_Currency_Box_Field_Event_unc_Equip_003",
+      "iconUrl": "/drop-icons/Icon_Item_Currency_Box_Field_Event_unc_Equip_003.webp",
+      "gradeName": "Special",
+      "category": "Reward Chest",
+      "chance": 100,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530001",
+      "nameEn": "Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_l_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_l_001.webp",
+      "gradeName": "Common",
+      "category": "Crafting Material",
+      "chance": 46.667,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "514310114",
+      "nameEn": "Artwork: High Commander Lagta",
+      "icon": "icon_AD_pic_A_MOB_Lagta_01",
+      "iconUrl": "/drop-icons/icon_AD_pic_A_MOB_Lagta_01.webp",
+      "gradeName": "Unique",
+      "category": "Pantheon Decor",
+      "chance": 25,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210630073",
+      "nameEn": "High Commander Lagta Boots",
+      "icon": "Icon_GM_0062_T06_Boots",
+      "iconUrl": "/drop-icons/Icon_GM_0062_T06_Boots.webp",
+      "gradeName": "Unique",
+      "category": "Shoes",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210730073",
+      "nameEn": "High Commander Lagta Cloak",
+      "icon": "Icon_GM_0062_T06_Cape",
+      "iconUrl": "/drop-icons/Icon_GM_0062_T06_Cape.webp",
+      "gradeName": "Unique",
+      "category": "Cloak",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "310230077",
+      "nameEn": "High Commander Lagta Earrings",
+      "icon": "Icon_ACC_ER_0077",
+      "iconUrl": "/drop-icons/Icon_ACC_ER_0077.webp",
+      "gradeName": "Unique",
+      "category": "Earrings",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210530073",
+      "nameEn": "High Commander Lagta Gloves",
+      "icon": "Icon_GM_0062_T06_Gloves",
+      "iconUrl": "/drop-icons/Icon_GM_0062_T06_Gloves.webp",
+      "gradeName": "Unique",
+      "category": "Gloves",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "310330077",
+      "nameEn": "High Commander Lagta Ring",
+      "icon": "Icon_ACC_Ring_0077",
+      "iconUrl": "/drop-icons/Icon_ACC_Ring_0077.webp",
+      "gradeName": "Unique",
+      "category": "Ring",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530005",
+      "nameEn": "Expert's Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_u_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_u_001.webp",
+      "gradeName": "Rare",
+      "category": "Crafting Material",
+      "chance": 11.667,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210330073",
+      "nameEn": "High Commander Lagta Helm",
+      "icon": "Icon_GM_0062_T06_Helmet",
+      "iconUrl": "/drop-icons/Icon_GM_0062_T06_Helmet.webp",
+      "gradeName": "Unique",
+      "category": "Helm",
+      "chance": 10.3,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210430073",
+      "nameEn": "High Commander Lagta Pauldrons",
+      "icon": "Icon_GM_0062_T06_Shoulder",
+      "iconUrl": "/drop-icons/Icon_GM_0062_T06_Shoulder.webp",
+      "gradeName": "Unique",
+      "category": "Pauldrons",
+      "chance": 10.3,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210230073",
+      "nameEn": "High Commander Lagta Greaves",
+      "icon": "Icon_GM_0062_T06_Pants",
+      "iconUrl": "/drop-icons/Icon_GM_0062_T06_Pants.webp",
+      "gradeName": "Unique",
+      "category": "Legs",
+      "chance": 8.584,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210130074",
+      "nameEn": "High Commander Lagta Breastplate",
+      "icon": "Icon_GM_0062_T06_Torso",
+      "iconUrl": "/drop-icons/Icon_GM_0062_T06_Torso.webp",
+      "gradeName": "Unique",
+      "category": "Top",
+      "chance": 6.438,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530008",
+      "nameEn": "Artisan's Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_e_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_e_001.webp",
+      "gradeName": "Epic",
+      "category": "Crafting Material",
+      "chance": 5.833,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "511360001",
+      "nameEn": "Lesser Manastone",
+      "icon": "Icon_Usable_MagicStone_a_001",
+      "iconUrl": "/drop-icons/Icon_Usable_MagicStone_a_001.webp",
+      "gradeName": "Common",
+      "category": "Manastone",
+      "chance": null,
+      "min": 1,
+      "max": 1
+    }
+  ]
+}

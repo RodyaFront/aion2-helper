@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Crosshair, GitBranch, Minus, Plus, X } from '@lucide/vue'
 import { countAccent, fitCountColorScale, fitRateColorScale } from '../../shared/map/rateColor'
-import type { IClusterStrategy, IMapMarker, MapPoint, MapScene } from '../../shared/map/types'
+import type { IClusterStrategy, IMapMarker, MapPoint, MapScene, MarkerRenderModel } from '../../shared/map/types'
 
 const props = withDefaults(defineProps<{
   scene: MapScene
@@ -31,6 +31,10 @@ const STACK_SCREEN_PX = 40
 const STACK_FAN_SCREEN_PX = 4
 /** Spiderfy ring radius in screen px. */
 const SPIDER_SCREEN_PX = 42
+/** Max DOM chips rendered in the viewport. */
+const MAX_DOM_MARKERS = 200
+/** Stack fan/deck only when at most this many chips are on screen. */
+const STACK_LAYOUT_MAX = 80
 
 type StackLayout = {
   size: number
@@ -43,15 +47,25 @@ type StackLayout = {
   anchorY: number
   isTop: boolean
   isBottom: boolean
+  /** Group key for popover reuse. */
+  groupId: string
 }
 
 const WORLD = computed(() => props.scene.map.width || 8192)
 const TILE_SIZE = computed(() => props.scene.map.tileSize || 512)
 
 const viewportRef = ref<HTMLElement | null>(null)
+
+/** Immediate camera (smooth pan/zoom). */
 const scale = ref(0.2)
 const panX = ref(0)
 const panY = ref(0)
+
+/** RAF-synced view used for heavy marker pipeline. */
+const viewScale = ref(0.2)
+const viewPanX = ref(0)
+const viewPanY = ref(0)
+const gesturing = ref(false)
 
 const dragging = ref(false)
 const hoveredMarkerId = ref<string | null>(null)
@@ -69,8 +83,44 @@ let dragLastX = 0
 let dragLastY = 0
 let pointerId: number | null = null
 let leaveTimer: ReturnType<typeof setTimeout> | null = null
+let viewRaf: number | null = null
+let gestureEndTimer: ReturnType<typeof setTimeout> | null = null
 
 const strategy = computed(() => props.clusterStrategy)
+
+function flushViewSync() {
+  viewScale.value = scale.value
+  viewPanX.value = panX.value
+  viewPanY.value = panY.value
+}
+
+function scheduleViewSync() {
+  gesturing.value = true
+  if (viewRaf != null) return
+  viewRaf = requestAnimationFrame(() => {
+    viewRaf = null
+    flushViewSync()
+  })
+  if (gestureEndTimer) clearTimeout(gestureEndTimer)
+  gestureEndTimer = setTimeout(() => {
+    gesturing.value = false
+    flushViewSync()
+    gestureEndTimer = null
+  }, 120)
+}
+
+function endGesture() {
+  if (viewRaf != null) {
+    cancelAnimationFrame(viewRaf)
+    viewRaf = null
+  }
+  if (gestureEndTimer) {
+    clearTimeout(gestureEndTimer)
+    gestureEndTimer = null
+  }
+  gesturing.value = false
+  flushViewSync()
+}
 
 const rateScale = computed(() =>
   fitRateColorScale(
@@ -114,7 +164,7 @@ const clusteredMarkers = computed((): IMapMarker[] => {
   const raw = props.scene.markers
   const strat = strategy.value
   if (!strat) return raw
-  return strat.cluster(raw, scale.value, {
+  return strat.cluster(raw, viewScale.value, {
     width: viewportRef.value?.clientWidth ?? 800,
     height: viewportRef.value?.clientHeight ?? 600,
   })
@@ -157,22 +207,33 @@ function displayPoint(marker: IMapMarker): MapPoint {
   }
 }
 
-/** Cull markers outside the padded viewport (uses display positions). */
-const visibleMarkers = computed((): IMapMarker[] => {
+/** Always cull to padded viewport (uses view* camera). */
+const culledMarkers = computed((): IMapMarker[] => {
   const vp = viewportRef.value
   const list = countFilteredMarkers.value
-  if (!vp || list.length < 80) return list
+  if (!vp) return list
   const pad = 80
-  const s = Math.max(scale.value, 0.0001)
-  const left = (-panX.value - pad) / s
-  const top = (-panY.value - pad) / s
-  const right = (-panX.value + vp.clientWidth + pad) / s
-  const bottom = (-panY.value + vp.clientHeight + pad) / s
+  const s = Math.max(viewScale.value, 0.0001)
+  const left = (-viewPanX.value - pad) / s
+  const top = (-viewPanY.value - pad) / s
+  const right = (-viewPanX.value + vp.clientWidth + pad) / s
+  const bottom = (-viewPanY.value + vp.clientHeight + pad) / s
   return list.filter((m) => {
     const p = displayPoint(m)
     return p.mapX >= left && p.mapX <= right && p.mapY >= top && p.mapY <= bottom
   })
 })
+
+const culledCount = computed(() => culledMarkers.value.length)
+
+/** Cap DOM chips; keep highest-rate markers. */
+const visibleMarkers = computed((): IMapMarker[] => {
+  const list = culledMarkers.value
+  if (list.length <= MAX_DOM_MARKERS) return list
+  return [...list].sort(compareMarkersTopFirst).slice(0, MAX_DOM_MARKERS)
+})
+
+const domCapped = computed(() => culledCount.value > MAX_DOM_MARKERS)
 
 const stageStyle = computed(() => ({
   width: `${WORLD.value}px`,
@@ -187,17 +248,23 @@ const stackMemberIds = computed(() => {
 })
 
 /**
- * Stack layout for overlapping chips: highest % on top (rank 0),
- * all members share one anchor; under layers peek ≤4px down only.
+ * Stack layout + group membership for popover reuse.
+ * Skipped when too many chips are on screen (z-index only).
  */
-const stackLayoutById = computed(() => {
+const stackState = computed(() => {
   const layouts = new Map<string, StackLayout>()
-  if (spiderOffsets.value.size > 0) return layouts
+  const groups = new Map<string, IMapMarker[]>()
+  if (spiderOffsets.value.size > 0) return { layouts, groups }
+
   const pool = visibleMarkers.value
-  if (pool.length === 0) return layouts
-  const s = Math.max(scale.value, 0.0001)
+  if (pool.length === 0 || pool.length > STACK_LAYOUT_MAX) {
+    return { layouts, groups }
+  }
+
+  const s = Math.max(viewScale.value, 0.0001)
   const radius = STACK_SCREEN_PX / s
   const assigned = new Set<string>()
+  let groupSeq = 0
 
   for (const seed of pool) {
     if (assigned.has(seed.id)) continue
@@ -222,6 +289,8 @@ const stackLayoutById = computed(() => {
     members.sort(compareMarkersTopFirst)
     const size = members.length
     const top = members[0]!
+    const groupId = `g${groupSeq++}`
+    groups.set(groupId, members)
     const anchorX = top.point.mapX
     const anchorY = top.point.mapY
     members.forEach((m, rank) => {
@@ -229,29 +298,45 @@ const stackLayoutById = computed(() => {
       layouts.set(m.id, {
         size,
         rank,
-        // One peek step only: max 4px down, no horizontal component.
         fanDy: size > 1 && rank > 0 ? STACK_FAN_SCREEN_PX : 0,
         anchorX,
         anchorY,
         isTop: size > 1 && rank === 0,
         isBottom: size > 1 && rank === size - 1,
+        groupId,
       })
     })
   }
-  return layouts
+  return { layouts, groups }
 })
+
+const stackLayoutById = computed(() => stackState.value.layouts)
 
 /** Paint weaker first so stronger (% then ×N) wins when layers overlap. */
 const markersForRender = computed(() => {
   return [...visibleMarkers.value].sort((a, b) => -compareMarkersTopFirst(a, b))
 })
 
+/** Cached render models for markers currently in the DOM. */
+const markerModelsById = computed(() => {
+  const map = new Map<string, MarkerRenderModel>()
+  const scaleFit = rateScale.value
+  for (const m of markersForRender.value) {
+    map.set(m.id, m.renderModel(scaleFit))
+  }
+  // Also cache popover members (may include capped-out siblings when using findStack fallback).
+  for (const m of stackPopover.value?.members ?? []) {
+    if (!map.has(m.id)) map.set(m.id, m.renderModel(scaleFit))
+  }
+  return map
+})
+
 /** ×N color scale from cluster sizes + stack deck sizes currently on screen. */
 const countScale = computed(() => {
   const counts: number[] = []
-  for (const m of countFilteredMarkers.value) {
+  for (const m of visibleMarkers.value) {
     if (m.kind !== 'cluster') continue
-    const c = m.renderModel(rateScale.value).count
+    const c = markerModelsById.value.get(m.id)?.count
     if (c != null && c >= 2) counts.push(c)
   }
   for (const layout of stackLayoutById.value.values()) {
@@ -260,29 +345,30 @@ const countScale = computed(() => {
   return fitCountColorScale(counts)
 })
 
-function markerModel(marker: IMapMarker) {
-  return marker.renderModel(rateScale.value)
+function markerModel(marker: IMapMarker): MarkerRenderModel {
+  return markerModelsById.value.get(marker.id) ?? marker.renderModel(rateScale.value)
 }
 
-function findStack(seed: IMapMarker, pool: IMapMarker[]): IMapMarker[] {
-  const s = Math.max(scale.value, 0.0001)
+/** Reuse stack groups when available; otherwise cheap proximity on visible pool. */
+function findStack(seed: IMapMarker): IMapMarker[] {
+  const layout = stackLayoutById.value.get(seed.id)
+  if (layout) {
+    const group = stackState.value.groups.get(layout.groupId)
+    if (group?.length) return group
+  }
+
+  const pool = visibleMarkers.value
+  const s = Math.max(viewScale.value, 0.0001)
   const radius = STACK_SCREEN_PX / s
   const members = [seed]
   const used = new Set([seed.id])
-  let changed = true
-  while (changed) {
-    changed = false
-    for (const candidate of pool) {
-      if (used.has(candidate.id)) continue
-      const cp = displayPoint(candidate)
-      if (members.some((m) => {
-        const mp = displayPoint(m)
-        return Math.hypot(mp.mapX - cp.mapX, mp.mapY - cp.mapY) <= radius
-      })) {
-        members.push(candidate)
-        used.add(candidate.id)
-        changed = true
-      }
+  for (const candidate of pool) {
+    if (used.has(candidate.id)) continue
+    const cp = displayPoint(candidate)
+    const sp = displayPoint(seed)
+    if (Math.hypot(sp.mapX - cp.mapX, sp.mapY - cp.mapY) <= radius) {
+      members.push(candidate)
+      used.add(candidate.id)
     }
   }
   return members.sort(compareMarkersTopFirst)
@@ -296,7 +382,7 @@ function worldToViewport(mapX: number, mapY: number) {
 }
 
 function openStackPopover(marker: IMapMarker) {
-  const members = findStack(marker, countFilteredMarkers.value)
+  const members = findStack(marker)
   if (members.length < 2) {
     stackPopover.value = null
     return
@@ -326,7 +412,6 @@ function onMarkerEnter(marker: IMapMarker) {
   clearLeaveTimer()
   hoveredMarkerId.value = marker.id
   focusMarkerId.value = marker.id
-  // While spiderfied, keep the existing list; proximity would see only 1 point.
   if (spiderOffsets.value.size > 0) return
   openStackPopover(marker)
 }
@@ -385,7 +470,6 @@ function spiderfyCurrentStack() {
     })
   })
   spiderOffsets.value = next
-  // Refresh popover anchor near the ring center
   const screen = worldToViewport(cx, cy)
   const vp = viewportRef.value
   stackPopover.value = {
@@ -394,6 +478,7 @@ function spiderfyCurrentStack() {
     left: Math.min(Math.max(8, screen.x + 18), (vp?.clientWidth ?? 400) - 220),
     top: Math.min(Math.max(8, screen.y + 18), (vp?.clientHeight ?? 400) - 160),
   }
+  endGesture()
 }
 
 function collapseSpiderfy() {
@@ -410,7 +495,6 @@ function markerStyle(marker: IMapMarker) {
   const layout = stackLayoutById.value.get(marker.id)
   const spiderfied = spiderOffsets.value.size > 0
   const p = displayPoint(marker)
-  // Deck: same map point for every member; only translateY peeks under.
   const useDeck = Boolean(layout && layout.size > 1 && !spiderfied)
   const mapX = useDeck ? layout!.anchorX : p.mapX
   const mapY = useDeck ? layout!.anchorY : p.mapY
@@ -426,7 +510,6 @@ function markerStyle(marker: IMapMarker) {
   const transform = fanDy
     ? `translate(${anchor}) scale(${inv}) translateY(${fanDy}px)`
     : `translate(${anchor}) scale(${inv})`
-  // Higher % then higher ×N => higher z. Rank 0 is always the top of a deck.
   const mobCount = markerMobCount(marker)
   let z = model.bossExclusive ? 4 : 2
   if (useDeck) {
@@ -471,6 +554,7 @@ function centerOnPoint(mapX: number, mapY: number, nextScale = scale.value) {
   scale.value = s
   panX.value = vp.clientWidth / 2 - mapX * s
   panY.value = vp.clientHeight / 2 - mapY * s
+  endGesture()
 }
 
 function centerOnFocus(nextScale = scale.value) {
@@ -479,25 +563,45 @@ function centerOnFocus(nextScale = scale.value) {
   centerOnPoint(focus.mapX, focus.mapY, nextScale)
 }
 
-function fitOverview() {
+function fitWorld() {
   const vp = viewportRef.value
   if (!vp) return
   const pad = 0.92
   const s = clampScale(Math.min(vp.clientWidth / WORLD.value, vp.clientHeight / WORLD.value) * pad)
-  const focus = props.scene.focusPoint
-  if (focus) centerOnPoint(focus.mapX, focus.mapY, Math.max(s, 0.18))
-  else if (props.scene.markers.length > 0) {
-    const xs = props.scene.markers.map((m) => m.point.mapX)
-    const ys = props.scene.markers.map((m) => m.point.mapY)
-    const cx = (Math.min(...xs) + Math.max(...xs)) / 2
-    const cy = (Math.min(...ys) + Math.max(...ys)) / 2
-    centerOnPoint(cx, cy, Math.max(s, 0.14))
+  scale.value = s
+  panX.value = (vp.clientWidth - WORLD.value * s) / 2
+  panY.value = (vp.clientHeight - WORLD.value * s) / 2
+  endGesture()
+}
+
+function fitMarkers() {
+  const vp = viewportRef.value
+  const markers = props.scene.markers
+  if (!vp) return
+  if (markers.length === 0) {
+    fitWorld()
+    return
   }
-  else {
-    scale.value = s
-    panX.value = (vp.clientWidth - WORLD.value * s) / 2
-    panY.value = (vp.clientHeight - WORLD.value * s) / 2
-  }
+
+  const xs = markers.map((m) => m.point.mapX)
+  const ys = markers.map((m) => m.point.mapY)
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const minSpan = WORLD.value * 0.08
+  const spanX = Math.max(minSpan, maxX - minX)
+  const spanY = Math.max(minSpan, maxY - minY)
+  const pad = 1.2
+  const s = clampScale(
+    Math.min(vp.clientWidth / (spanX * pad), vp.clientHeight / (spanY * pad)),
+  )
+  centerOnPoint((minX + maxX) / 2, (minY + maxY) / 2, s)
+}
+
+function goToFocusControl() {
+  if (props.scene.focusPoint) centerOnFocus(Math.max(scale.value, 0.28))
+  else fitMarkers()
 }
 
 function zoomBy(factor: number, originX?: number, originY?: number) {
@@ -516,9 +620,12 @@ function zoomBy(factor: number, originX?: number, originY?: number) {
   panY.value = oy - worldY * next
   if (spiderOffsets.value.size) collapseSpiderfy()
   else stackPopover.value = null
+  scheduleViewSync()
 }
 
 function onWheel(e: WheelEvent) {
+  const target = e.target as HTMLElement | null
+  if (target?.closest('.boss-map-stack-popover')) return
   const vp = viewportRef.value
   if (!vp) return
   const rect = vp.getBoundingClientRect()
@@ -531,6 +638,7 @@ function onPointerDown(e: PointerEvent) {
   const target = e.target as HTMLElement
   if (target.closest('.boss-map-stack-popover') || target.closest('.boss-map-marker')) return
   dragging.value = true
+  gesturing.value = true
   hoveredMarkerId.value = null
   if (spiderOffsets.value.size === 0) {
     stackPopover.value = null
@@ -548,12 +656,14 @@ function onPointerMove(e: PointerEvent) {
   panY.value += e.clientY - dragLastY
   dragLastX = e.clientX
   dragLastY = e.clientY
+  scheduleViewSync()
 }
 
 function onPointerUp(e: PointerEvent) {
   if (pointerId !== e.pointerId) return
   dragging.value = false
   pointerId = null
+  endGesture()
   try {
     ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
   }
@@ -566,7 +676,8 @@ function resetView() {
   collapseSpiderfy()
   nextTick(() => {
     if (props.scene.focusPoint) centerOnFocus(0.28)
-    else fitOverview()
+    else if (props.scene.markers.length > 0) fitMarkers()
+    else fitWorld()
   })
 }
 
@@ -574,6 +685,8 @@ onMounted(resetView)
 
 onBeforeUnmount(() => {
   clearLeaveTimer()
+  if (viewRaf != null) cancelAnimationFrame(viewRaf)
+  if (gestureEndTimer) clearTimeout(gestureEndTimer)
 })
 
 watch(
@@ -583,7 +696,7 @@ watch(
 </script>
 
 <template>
-  <div class="boss-map-viewer">
+  <div class="boss-map-viewer" :class="{ 'is-gesturing': gesturing }">
     <div
       ref="viewportRef"
       class="boss-map-viewport"
@@ -616,20 +729,12 @@ watch(
           :class="[
             `boss-map-marker--${marker.kind}`,
             {
-              'is-hovered': hoveredMarkerId === marker.id || focusMarkerId === marker.id,
-              'is-dimmed': (hoveredMarkerId || focusMarkerId)
-                && hoveredMarkerId !== marker.id
-                && focusMarkerId !== marker.id
-                && !stackMemberIds.has(marker.id),
-              'is-boss-exclusive': markerModel(marker).bossExclusive,
-              'is-spiderfied': spiderOffsets.has(marker.id),
               'is-stack-fan': (stackLayoutById.get(marker.id)?.size || 0) > 1,
-              'is-stack-top': !!stackLayoutById.get(marker.id)?.isTop,
               'is-stack-bottom': !!stackLayoutById.get(marker.id)?.isBottom,
             },
           ]"
           :style="markerStyle(marker)"
-          :title="markerModel(marker).title"
+          :title="markerModel(marker).title || markerModel(marker).label"
           @pointerenter="onMarkerEnter(marker)"
           @pointerleave="onMarkerLeave"
           @click.stop="openMarkerDetail(marker)"
@@ -664,6 +769,7 @@ watch(
         @pointerenter="onPopoverEnter"
         @pointerleave="onPopoverLeave"
         @pointerdown.stop
+        @wheel.stop
       >
         <div class="boss-map-stack-head">
           <p class="boss-map-stack-title">
@@ -694,6 +800,7 @@ watch(
             :key="m.id"
             class="boss-map-stack-item"
             :class="{ 'is-active': focusMarkerId === m.id }"
+            :title="markerModel(m).title || ''"
             @pointerenter="selectStackMember(m)"
             @click="onStackItemActivate(m)"
           >
@@ -714,25 +821,28 @@ watch(
 
     <div class="boss-map-toolbar">
       <div class="boss-map-tools">
-        <button type="button" class="btn btn-sm btn-ghost btn-icon" aria-label="Приблизить" @click="zoomBy(1.2)">
+        <button type="button" class="btn btn-sm btn-ghost btn-icon" aria-label="Приблизить" @click="zoomBy(1.2); endGesture()">
           <Plus class="ui-icon" aria-hidden="true" />
         </button>
-        <button type="button" class="btn btn-sm btn-ghost btn-icon" aria-label="Отдалить" @click="zoomBy(1 / 1.2)">
+        <button type="button" class="btn btn-sm btn-ghost btn-icon" aria-label="Отдалить" @click="zoomBy(1 / 1.2); endGesture()">
           <Minus class="ui-icon" aria-hidden="true" />
         </button>
         <button
           type="button"
           class="btn btn-sm btn-ghost"
           :disabled="!scene.focusPoint && scene.markers.length === 0"
-          @click="scene.focusPoint ? centerOnFocus(Math.max(scale, 0.28)) : fitOverview()"
+          @click="goToFocusControl"
         >
           <Crosshair class="ui-icon" aria-hidden="true" />
-          {{ scene.focusLabel || 'К меткам' }}
+          {{ scene.focusLabel || (scene.focusPoint ? 'К меткам' : 'Все точки') }}
         </button>
       </div>
       <p class="boss-map-hint">
         Колёсико — зум, перетаскивание — сдвиг
-        <template v-if="scene.hintExtra"> · {{ scene.hintExtra }}</template>
+        <template v-if="domCapped">
+          · на экране {{ MAX_DOM_MARKERS }} из {{ culledCount }}
+        </template>
+        <template v-else-if="scene.hintExtra"> · {{ scene.hintExtra }}</template>
       </p>
     </div>
   </div>

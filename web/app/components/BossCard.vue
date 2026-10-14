@@ -157,17 +157,18 @@ function toggle(kind: 'custom' | 'interval') {
               {{ boss.nameRu }}
             </p>
           </div>
-          <button
-            type="button"
-            class="fav-btn"
-            :class="{ 'is-on': boss.favorite }"
-            :aria-pressed="boss.favorite"
-            :aria-label="boss.favorite ? 'Убрать из избранного' : 'В избранное'"
-            :title="boss.favorite ? 'Убрать из избранного' : 'В избранное'"
-            @click="store.toggleFavorite(boss.id)"
-          >
-            <Bookmark class="ui-icon" aria-hidden="true" :fill="boss.favorite ? 'currentColor' : 'none'" />
-          </button>
+          <UiAppTooltip :content="boss.favorite ? 'Убрать из избранного' : 'В избранное'">
+            <button
+              type="button"
+              class="fav-btn"
+              :class="{ 'is-on': boss.favorite }"
+              :aria-pressed="boss.favorite"
+              :aria-label="boss.favorite ? 'Убрать из избранного' : 'В избранное'"
+              @click="store.toggleFavorite(boss.id)"
+            >
+              <Bookmark class="ui-icon" aria-hidden="true" :fill="boss.favorite ? 'currentColor' : 'none'" />
+            </button>
+          </UiAppTooltip>
         </div>
         <span class="status-chip" :class="`is-${status}`">{{ statusLabel }}</span>
         <p class="loc">

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dropsDir = path.join(root, 'shared', 'items', 'drops')
-const catalogPath = path.join(root, 'shared', 'items', 'catalog.json')
+const catalogPath = path.join(root, 'public', 'data', 'items-catalog.json')
 
 const SEED = [
   { id: 'raw_leather', itemId: 610530011, nameRuFallback: 'Необработанная кожа' },

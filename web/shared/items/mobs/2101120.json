@@ -1,0 +1,172 @@
+{
+  "mobId": "2101120",
+  "scrapedAt": "2026-10-13T20:19:00.625Z",
+  "source": "dbaion2.ru",
+  "drops": [
+    {
+      "itemId": "533700372",
+      "nameEn": "Dartan's Loot Chest (Bound)",
+      "icon": "Icon_Item_Currency_Box_Field_Event_unc_Equip_003",
+      "iconUrl": "/drop-icons/Icon_Item_Currency_Box_Field_Event_unc_Equip_003.webp",
+      "gradeName": "Special",
+      "category": "Reward Chest",
+      "chance": 100,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530001",
+      "nameEn": "Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_l_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_l_001.webp",
+      "gradeName": "Common",
+      "category": "Crafting Material",
+      "chance": 46.667,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "514310116",
+      "nameEn": "Artwork: Silent Dartan",
+      "icon": "icon_AD_pic_A_MOB_BeritraD_01",
+      "iconUrl": "/drop-icons/icon_AD_pic_A_MOB_BeritraD_01.webp",
+      "gradeName": "Unique",
+      "category": "Pantheon Decor",
+      "chance": 25,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210630059",
+      "nameEn": "Dartan Boots",
+      "icon": "Icon_GM_0041_T04_Boots",
+      "iconUrl": "/drop-icons/Icon_GM_0041_T04_Boots.webp",
+      "gradeName": "Unique",
+      "category": "Shoes",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210730059",
+      "nameEn": "Dartan Cloak",
+      "icon": "Icon_GM_0041_T04_Cape",
+      "iconUrl": "/drop-icons/Icon_GM_0041_T04_Cape.webp",
+      "gradeName": "Unique",
+      "category": "Cloak",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "310230063",
+      "nameEn": "Dartan Earrings",
+      "icon": "Icon_ACC_ER_0058",
+      "iconUrl": "/drop-icons/Icon_ACC_ER_0058.webp",
+      "gradeName": "Unique",
+      "category": "Earrings",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210530059",
+      "nameEn": "Dartan Gloves",
+      "icon": "Icon_GM_0041_T04_Gloves",
+      "iconUrl": "/drop-icons/Icon_GM_0041_T04_Gloves.webp",
+      "gradeName": "Unique",
+      "category": "Gloves",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "310330063",
+      "nameEn": "Dartan Ring",
+      "icon": "Icon_ACC_Ring_0058",
+      "iconUrl": "/drop-icons/Icon_ACC_Ring_0058.webp",
+      "gradeName": "Unique",
+      "category": "Ring",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530005",
+      "nameEn": "Expert's Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_u_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_u_001.webp",
+      "gradeName": "Rare",
+      "category": "Crafting Material",
+      "chance": 11.667,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210330059",
+      "nameEn": "Dartan Helm",
+      "icon": "Icon_GM_0041_T04_Helmet",
+      "iconUrl": "/drop-icons/Icon_GM_0041_T04_Helmet.webp",
+      "gradeName": "Unique",
+      "category": "Helm",
+      "chance": 10.3,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210430059",
+      "nameEn": "Dartan Pauldrons",
+      "icon": "Icon_GM_0041_T04_Shoulder",
+      "iconUrl": "/drop-icons/Icon_GM_0041_T04_Shoulder.webp",
+      "gradeName": "Unique",
+      "category": "Pauldrons",
+      "chance": 10.3,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210230059",
+      "nameEn": "Dartan Greaves",
+      "icon": "Icon_GM_0041_T04_Pants",
+      "iconUrl": "/drop-icons/Icon_GM_0041_T04_Pants.webp",
+      "gradeName": "Unique",
+      "category": "Legs",
+      "chance": 8.584,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210130060",
+      "nameEn": "Dartan Breastplate",
+      "icon": "Icon_GM_0041_T04_Torso",
+      "iconUrl": "/drop-icons/Icon_GM_0041_T04_Torso.webp",
+      "gradeName": "Unique",
+      "category": "Top",
+      "chance": 6.438,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530008",
+      "nameEn": "Artisan's Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_e_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_e_001.webp",
+      "gradeName": "Epic",
+      "category": "Crafting Material",
+      "chance": 5.833,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "511360001",
+      "nameEn": "Lesser Manastone",
+      "icon": "Icon_Usable_MagicStone_a_001",
+      "iconUrl": "/drop-icons/Icon_Usable_MagicStone_a_001.webp",
+      "gradeName": "Common",
+      "category": "Manastone",
+      "chance": null,
+      "min": 1,
+      "max": 1
+    }
+  ]
+}

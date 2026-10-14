@@ -8,8 +8,15 @@ export type ItemDef = {
   nameEn: string
   nameRu: string
   category: ItemCategory
-  grade?: string
+  /** Human label from dump, e.g. "Crafting Material". */
+  categoryName?: string | null
+  /** EQUIP | USABLE | MISC | CURRENCY */
+  itemType?: string | null
+  grade?: string | null
+  itemLevel?: number | null
+  levelReq?: number | null
   icon: string | null
+  iconKey?: string | null
   sourceUrl: string
   dropSourceCount: number
   verteronSpawnCount: number
@@ -50,5 +57,61 @@ export type ItemCatalogFile = {
   scrapedAt: string
   source: string
   attribution: string
+  count?: number
+  runtimePath?: string
   items: ItemDef[]
+}
+
+/** One line from an NPC drop table (dbaion2). */
+export type MobDropLine = {
+  itemId: string
+  nameEn: string
+  icon?: string | null
+  iconUrl?: string | null
+  gradeName?: string | null
+  category?: string | null
+  chance: number | null
+  min?: number | null
+  max?: number | null
+}
+
+export type MobLootFile = {
+  mobId: string
+  scrapedAt: string
+  source: string
+  /** Base NPC level from dbaion2 (before player-level scaling). */
+  baseLevel?: number | null
+  drops: MobDropLine[]
+}
+
+/** Shared reward_basic band for an effective monster level (e.g. Verteron 45). */
+export type SharedLevelLootFile = {
+  level: number
+  regionId: string
+  region?: string
+  scrapedAt: string
+  source: string
+  method?: string
+  seedMobIds?: string[]
+  note?: string
+  drops: MobDropLine[]
+}
+
+export type ItemSortKey =
+  | 'name'
+  | 'grade'
+  | 'level'
+  | 'id'
+  | 'map'
+
+export type ItemFilterInput = {
+  query: string
+  category: string
+  itemType: string
+  grade: string
+  /** Only items with local Verteron drop markers (map modal). */
+  onlyWithDropPoints: boolean
+  /** Hide skins / titles / pets / wings / decor by default. */
+  hideCosmetics: boolean
+  sort: ItemSortKey
 }

@@ -39,3 +39,5 @@ vendor/piper/voices.json
 
 # Temporary scrape downloads
 tmp-scrape/
+
+# Keep generated mob loot + drop icons in git (offline catalog)

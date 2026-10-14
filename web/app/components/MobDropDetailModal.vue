@@ -1,16 +1,33 @@
 <script setup lang="ts">
-import { ExternalLink, MapPin, Package } from '@lucide/vue'
-import type { DropSource, ItemDef } from '../../shared/items/types'
-import { formatRate } from '../../shared/map/markers'
+import { ExternalLink, MapPin, Package, Pin } from '@lucide/vue'
+import { ASSUMED_PLAYER_LEVEL, getMobLootForPlayer } from '../../shared/items/catalog'
+import type { DropSource, ItemDef, MobDropLine } from '../../shared/items/types'
+import { gradeClass } from '../../shared/items/grade'
+import { formatRate, rateTooltip } from '../../shared/map/markers'
+import ItemIcon from './ItemIcon.vue'
+import LootTable from './LootTable.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   item: ItemDef
   source: DropSource
   /** When opened from a zoom-cluster chip. */
   clusterCount?: number | null
-}>()
+  /** Attach shared Lv45 band for baseLevel &lt; 45 (map sidebar toggle). */
+  useSharedScaling?: boolean
+}>(), {
+  clusterCount: null,
+  useSharedScaling: true,
+})
 
 const open = defineModel<boolean>('open', { required: true })
+
+const portraitBroken = ref(false)
+watch(
+  () => props.source.iconUrl,
+  () => {
+    portraitBroken.value = false
+  },
+)
 
 const namePrimary = computed(() => props.source.nameRu || props.source.nameEn)
 const nameSecondary = computed(() => {
@@ -20,9 +37,23 @@ const nameSecondary = computed(() => {
   return null
 })
 
+const lootView = computed(() =>
+  getMobLootForPlayer(props.source.mobId, {
+    baseLevel: props.source.level,
+    useSharedScaling: props.useSharedScaling,
+  }),
+)
+
 const metaBits = computed(() => {
   const bits: string[] = []
-  if (props.source.level != null) bits.push(`Ур. ${props.source.level}`)
+  if (props.source.level != null) {
+    if (lootView.value?.composed) {
+      bits.push(`Ур. ${props.source.level}→${lootView.value.effectiveLevel}`)
+    }
+    else {
+      bits.push(`Ур. ${props.source.level}`)
+    }
+  }
   if (props.source.gradeName) bits.push(props.source.gradeName)
   if (props.source.title) bits.push(props.source.title)
   if (props.source.creatureName) bits.push(props.source.creatureName)
@@ -40,6 +71,31 @@ const dbaionUrl = computed(() =>
 )
 
 const npcPageUrl = computed(() => `https://dbaion2.ru/npcs/${props.source.mobId}/`)
+
+const pinnedRateText = computed(() => formatRate(props.source.rate))
+const pinnedRateTip = computed(() => rateTooltip(props.source.rate) || '')
+
+/** Other drops excluding the map item (shown once in pinned). */
+const otherDrops = computed((): MobDropLine[] => {
+  const pinnedId = String(props.item.itemId)
+  const drops = lootView.value?.drops ?? []
+  return drops.filter((d) => String(d.itemId) !== pinnedId)
+})
+
+const lootEmptyMessage = computed(() => {
+  if (!lootView.value) return 'Таблица дропа для этого моба ещё не загружена.'
+  return 'Других предметов в таблице нет.'
+})
+
+const lootLevelHint = computed(() => {
+  const view = lootView.value
+  if (!view?.composed) return null
+  const base = view.baseLevel
+  if (base != null) {
+    return `Дроп при персонаже ${ASSUMED_PLAYER_LEVEL} (база моба ${base} → эфф. ${view.effectiveLevel})`
+  }
+  return `Дроп при персонаже ${ASSUMED_PLAYER_LEVEL}`
+})
 
 function raceLabel(race: string | null | undefined): string | null {
   if (!race) return null
@@ -61,21 +117,26 @@ function pointsLabel(n: number): string {
   <UiAppModal
     v-model:open="open"
     :title="namePrimary"
-    size="sm"
+    size="md"
     panel-class="mob-drop-modal-panel"
   >
     <div class="mob-drop-detail">
       <div class="mob-drop-hero">
         <div class="mob-drop-portrait">
           <img
-            v-if="source.iconUrl"
+            v-if="source.iconUrl && !portraitBroken"
             :src="source.iconUrl"
             :alt="namePrimary"
             class="mob-drop-portrait-img"
             loading="lazy"
             decoding="async"
+            @error="portraitBroken = true"
           >
-          <Package v-else class="ui-icon mob-drop-portrait-fallback" aria-hidden="true" />
+          <Package
+            v-else
+            class="ui-icon mob-drop-portrait-fallback"
+            aria-hidden="true"
+          />
         </div>
         <div class="mob-drop-identity">
           <p v-if="nameSecondary" class="mob-drop-name-en">
@@ -100,32 +161,44 @@ function pointsLabel(n: number): string {
         </div>
       </div>
 
-      <section class="mob-drop-loot" aria-label="Дроп предмета">
-        <p class="mob-drop-loot-label">
-          Дроп на карте
-        </p>
-        <div class="mob-drop-loot-row">
-          <img
-            v-if="item.icon"
+      <section class="mob-drop-pinned" aria-label="Предмет на карте">
+        <div class="mob-drop-pinned-head">
+          <Pin class="ui-icon" aria-hidden="true" />
+          <span>На карте</span>
+        </div>
+        <div class="mob-drop-loot-row is-pinned">
+          <ItemIcon
             :src="item.icon"
             :alt="item.nameEn"
+            :size="1.75"
             class="mob-drop-loot-icon"
-            loading="lazy"
-          >
-          <Package v-else class="ui-icon" aria-hidden="true" />
+          />
           <div class="mob-drop-loot-text">
-            <p class="mob-drop-loot-name">
+            <p class="mob-drop-loot-name" :class="gradeClass(item.grade)">
               {{ item.nameRu || item.nameEn }}
             </p>
             <p class="mob-drop-loot-sub">
               {{ item.nameEn }}
             </p>
           </div>
-          <span class="mob-drop-loot-rate">
-            {{ formatRate(source.rate) }}
-          </span>
+          <UiAppTooltip
+            :content="pinnedRateTip"
+            :disabled="!pinnedRateTip"
+          >
+            <span class="mob-drop-loot-rate">
+              {{ pinnedRateText }}
+            </span>
+          </UiAppTooltip>
         </div>
       </section>
+
+      <LootTable
+        :drops="otherDrops"
+        density="normal"
+        :total-count="lootView?.drops.length ?? null"
+        :empty-message="lootEmptyMessage"
+        :hint="lootLevelHint"
+      />
     </div>
 
     <template #footer>

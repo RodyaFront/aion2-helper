@@ -5,6 +5,8 @@ export type FilterOption = {
   value: string
   label: string
   keywords?: string
+  /** CSS color for a leading swatch dot (e.g. var(--grade-rare)). */
+  swatch?: string
 }
 
 const props = withDefaults(defineProps<{
@@ -31,9 +33,11 @@ const rootRef = ref<HTMLElement | null>(null)
 const listRef = ref<HTMLElement | null>(null)
 const activeIndex = ref(0)
 
-const selectedLabel = computed(() => {
-  return props.options.find((o) => o.value === props.modelValue)?.label || props.placeholder
-})
+const selectedOption = computed(() =>
+  props.options.find((o) => o.value === props.modelValue) ?? null,
+)
+
+const selectedLabel = computed(() => selectedOption.value?.label || props.placeholder)
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
@@ -121,7 +125,15 @@ onBeforeUnmount(() => {
     >
       <span class="app-filter-trigger-text">
         <span v-if="label" class="app-filter-label">{{ label }}</span>
-        <span class="app-filter-value">{{ selectedLabel }}</span>
+        <span class="app-filter-value">
+          <span
+            v-if="selectedOption?.swatch"
+            class="app-filter-swatch"
+            :style="{ background: selectedOption.swatch }"
+            aria-hidden="true"
+          />
+          {{ selectedLabel }}
+        </span>
       </span>
       <ChevronsUpDown class="ui-icon" aria-hidden="true" />
     </button>
@@ -155,7 +167,15 @@ onBeforeUnmount(() => {
           @mouseenter="activeIndex = idx"
           @click="select(opt.value)"
         >
-          <span>{{ opt.label }}</span>
+          <span class="app-filter-option-main">
+            <span
+              v-if="opt.swatch"
+              class="app-filter-swatch"
+              :style="{ background: opt.swatch }"
+              aria-hidden="true"
+            />
+            <span>{{ opt.label }}</span>
+          </span>
           <Check v-if="opt.value === modelValue" class="ui-icon" aria-hidden="true" />
         </li>
       </ul>

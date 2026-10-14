@@ -1,0 +1,172 @@
+{
+  "mobId": "2101122",
+  "scrapedAt": "2026-10-13T20:19:01.694Z",
+  "source": "dbaion2.ru",
+  "drops": [
+    {
+      "itemId": "533700373",
+      "nameEn": "Kashapa's Loot Chest (Bound)",
+      "icon": "Icon_Item_Currency_Box_Field_Event_unc_Equip_003",
+      "iconUrl": "/drop-icons/Icon_Item_Currency_Box_Field_Event_unc_Equip_003.webp",
+      "gradeName": "Special",
+      "category": "Reward Chest",
+      "chance": 100,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530001",
+      "nameEn": "Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_l_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_l_001.webp",
+      "gradeName": "Common",
+      "category": "Crafting Material",
+      "chance": 46.667,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "514310113",
+      "nameEn": "Artwork: Soul Ruler Kashapa",
+      "icon": "icon_AD_pic_A_MOB_Kashapa_01",
+      "iconUrl": "/drop-icons/icon_AD_pic_A_MOB_Kashapa_01.webp",
+      "gradeName": "Unique",
+      "category": "Pantheon Decor",
+      "chance": 25,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210630072",
+      "nameEn": "Kashapa Boots",
+      "icon": "Icon_Equip_AR_L_0068_T05_Boots",
+      "iconUrl": "/drop-icons/Icon_Equip_AR_L_0068_T05_Boots.webp",
+      "gradeName": "Unique",
+      "category": "Shoes",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210730072",
+      "nameEn": "Kashapa Cloak",
+      "icon": "Icon_Equip_AR_L_0068_T05_Cape",
+      "iconUrl": "/drop-icons/Icon_Equip_AR_L_0068_T05_Cape.webp",
+      "gradeName": "Unique",
+      "category": "Cloak",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "310230076",
+      "nameEn": "Kashapa Earrings",
+      "icon": "Icon_ACC_ER_0081",
+      "iconUrl": "/drop-icons/Icon_ACC_ER_0081.webp",
+      "gradeName": "Unique",
+      "category": "Earrings",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210530072",
+      "nameEn": "Kashapa Gloves",
+      "icon": "Icon_Equip_AR_L_0068_T05_Gloves",
+      "iconUrl": "/drop-icons/Icon_Equip_AR_L_0068_T05_Gloves.webp",
+      "gradeName": "Unique",
+      "category": "Gloves",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "310330076",
+      "nameEn": "Kashapa Ring",
+      "icon": "Icon_ACC_Ring_0081",
+      "iconUrl": "/drop-icons/Icon_ACC_Ring_0081.webp",
+      "gradeName": "Unique",
+      "category": "Ring",
+      "chance": 12.876,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530005",
+      "nameEn": "Expert's Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_u_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_u_001.webp",
+      "gradeName": "Rare",
+      "category": "Crafting Material",
+      "chance": 11.667,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210330072",
+      "nameEn": "Kashapa Helm",
+      "icon": "Icon_Equip_AR_L_0068_T05_Helmet",
+      "iconUrl": "/drop-icons/Icon_Equip_AR_L_0068_T05_Helmet.webp",
+      "gradeName": "Unique",
+      "category": "Helm",
+      "chance": 10.3,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210430072",
+      "nameEn": "Kashapa Pauldrons",
+      "icon": "Icon_Equip_AR_L_0068_T05_Shoulder",
+      "iconUrl": "/drop-icons/Icon_Equip_AR_L_0068_T05_Shoulder.webp",
+      "gradeName": "Unique",
+      "category": "Pauldrons",
+      "chance": 10.3,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210230072",
+      "nameEn": "Kashapa Greaves",
+      "icon": "Icon_Equip_AR_L_0068_T05_Pants",
+      "iconUrl": "/drop-icons/Icon_Equip_AR_L_0068_T05_Pants.webp",
+      "gradeName": "Unique",
+      "category": "Legs",
+      "chance": 8.584,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "210130073",
+      "nameEn": "Kashapa Breastplate",
+      "icon": "Icon_Equip_AR_L_0068_T05_Torso",
+      "iconUrl": "/drop-icons/Icon_Equip_AR_L_0068_T05_Torso.webp",
+      "gradeName": "Unique",
+      "category": "Top",
+      "chance": 6.438,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "610530008",
+      "nameEn": "Artisan's Refining Stone",
+      "icon": "Icon_Item_Craft_SmeltStone_Equip_A_e_001",
+      "iconUrl": "/drop-icons/Icon_Item_Craft_SmeltStone_Equip_A_e_001.webp",
+      "gradeName": "Epic",
+      "category": "Crafting Material",
+      "chance": 5.833,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "itemId": "511360001",
+      "nameEn": "Lesser Manastone",
+      "icon": "Icon_Usable_MagicStone_a_001",
+      "iconUrl": "/drop-icons/Icon_Usable_MagicStone_a_001.webp",
+      "gradeName": "Common",
+      "category": "Manastone",
+      "chance": null,
+      "min": 1,
+      "max": 1
+    }
+  ]
+}

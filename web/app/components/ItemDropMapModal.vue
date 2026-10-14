@@ -1,12 +1,22 @@
 <script setup lang="ts">
+import { Info } from '@lucide/vue'
 import { SameMobTypeZoomCluster } from '../../shared/map/cluster'
-import { createItemDropMapScene, getItemDropMarkers, getItemDropSource } from '../../shared/items/catalog'
+import {
+  ASSUMED_PLAYER_LEVEL,
+  createItemDropMapScene,
+  getItemDropMarkers,
+  getItemDropSource,
+  getSharedLevelLoot,
+} from '../../shared/items/catalog'
+import { gradeClass } from '../../shared/items/grade'
 import type { DropSource, ItemDef } from '../../shared/items/types'
 import type { IMapMarker } from '../../shared/map/types'
 import GameMapModal from './GameMapModal.vue'
+import ItemIcon from './ItemIcon.vue'
+import LootTable from './LootTable.vue'
 import MobDropDetailModal from './MobDropDetailModal.vue'
 
-const DEFAULT_RATE_MIN = 2
+const DEFAULT_RATE_MIN = 0
 const DEFAULT_RATE_MAX = 45
 const DEFAULT_COUNT_MIN = 1
 const DEFAULT_COUNT_MAX = 9999
@@ -23,8 +33,26 @@ const rateMin = ref(DEFAULT_RATE_MIN)
 const rateMax = ref(DEFAULT_RATE_MAX)
 const countMin = ref(DEFAULT_COUNT_MIN)
 const countMax = ref(DEFAULT_COUNT_MAX)
+/** When on, low-level mobs use shared Verteron Lv45 loot in the detail modal. */
+const after45Level = ref(true)
+const infoTipOpen = ref(false)
+const showSharedLoot = ref(false)
+const infoTipRef = ref<{ hide: () => void } | null>(null)
 
-const totalMarkers = computed(() => getItemDropMarkers(props.item.id, 'verteron').length)
+const sharedLootFile = computed(() => getSharedLevelLoot(ASSUMED_PLAYER_LEVEL, 'verteron'))
+const sharedLootDrops = computed(() => sharedLootFile.value?.drops ?? [])
+
+function openSharedLootModal() {
+  infoTipRef.value?.hide()
+  infoTipOpen.value = false
+  showSharedLoot.value = true
+}
+
+const totalMarkers = computed(() => {
+  const byItemId = getItemDropMarkers(props.item.itemId, 'verteron').length
+  if (byItemId) return byItemId
+  return getItemDropMarkers(props.item.id, 'verteron').length
+})
 
 const filterBounds = computed(() => {
   let lo = Number(rateMin.value)
@@ -60,7 +88,8 @@ const selectedClusterCount = ref<number | null>(null)
 
 function onSelectMarker(marker: IMapMarker) {
   if (!marker.mobId) return
-  const source = getItemDropSource(props.item.id, marker.mobId)
+  const source = getItemDropSource(props.item.itemId, marker.mobId)
+    || getItemDropSource(props.item.id, marker.mobId)
   if (!source) return
   selectedSource.value = source
   selectedClusterCount.value = marker.kind === 'cluster'
@@ -92,6 +121,9 @@ watch(open, (isOpen) => {
     showMob.value = false
     selectedSource.value = null
     selectedClusterCount.value = null
+    showSharedLoot.value = false
+    infoTipRef.value?.hide()
+    infoTipOpen.value = false
   }
 })
 </script>
@@ -109,6 +141,74 @@ watch(open, (isOpen) => {
   >
     <template #sidebar>
       <div class="map-data-sidebar">
+        <article class="map-research-card" aria-label="Исследуемый ресурс">
+          <p class="map-research-eyebrow">
+            Исследуем на карте
+          </p>
+          <div class="map-research-body">
+            <div class="map-research-media">
+              <ItemIcon
+                :src="item.icon"
+                :alt="item.nameEn"
+                :size="2.5"
+                class="map-research-icon"
+              />
+            </div>
+            <div class="map-research-text">
+              <h3 class="map-research-title" :class="gradeClass(item.grade)">
+                {{ item.nameRu || item.nameEn }}
+              </h3>
+              <p class="map-research-sub">
+                {{ item.nameEn }} · #{{ item.itemId }}
+              </p>
+              <p class="map-research-meta">
+                {{ item.dropSourceCount }} источников
+                · {{ item.verteronSpawnCount }} точек
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <div class="map-level-toggle">
+          <div class="map-level-toggle-label">
+            <label class="map-level-toggle-title" for="map-after-45">after 45lvl</label>
+            <UiAppTooltip
+              ref="infoTipRef"
+              trigger="click"
+              placement="bottom"
+              max-width="18.5rem"
+              @update:open="infoTipOpen = $event"
+            >
+              <button
+                type="button"
+                class="map-level-toggle-info"
+                aria-label="Что значит after 45lvl"
+                :aria-expanded="infoTipOpen"
+              >
+                <Info class="ui-icon" aria-hidden="true" />
+              </button>
+              <template #content>
+                <p class="app-tooltip-rich">
+                  После достижения персонажем 45 уровня все мобы ниже 45 становятся минимум 45 уровня
+                  и получают
+                  <button
+                    type="button"
+                    class="app-tooltip-link"
+                    @click="openSharedLootModal"
+                  >shared лут</button>.
+                </p>
+              </template>
+            </UiAppTooltip>
+          </div>
+          <input
+            id="map-after-45"
+            v-model="after45Level"
+            class="map-level-toggle-input"
+            type="checkbox"
+            aria-label="after 45lvl"
+          >
+        </div>
+
         <section class="map-data-block">
           <h3 class="map-data-heading">
             Шанс дропа
@@ -225,5 +325,21 @@ watch(open, (isOpen) => {
     :item="item"
     :source="selectedSource"
     :cluster-count="selectedClusterCount"
+    :use-shared-scaling="after45Level"
   />
+
+  <UiAppModal
+    v-model:open="showSharedLoot"
+    title="Shared лут · Verteron Lv45"
+    description="Общая таблица дропа для эффективного уровня 45. Накладывается на собственный лут моба (Soul, материалы вида)."
+    size="md"
+    panel-class="shared-loot-modal-panel"
+  >
+    <LootTable
+      :drops="sharedLootDrops"
+      density="normal"
+      :total-count="sharedLootDrops.length"
+      empty-message="Shared-таблица ещё не загружена."
+    />
+  </UiAppModal>
 </template>

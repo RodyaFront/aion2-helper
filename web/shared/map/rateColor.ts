@@ -19,6 +19,9 @@ export function isBossExclusiveDrop(rate: number): boolean {
 /**
  * Fit green↔red ramp from farm rates on the current map only.
  * Outliers (>15%) never enter the scale.
+ *
+ * Important: pad tiny spans. Otherwise 0.16% vs 0.24% (both look like "~0.2%")
+ * stretch across the full red→green ramp and read as random.
  */
 export function fitRateColorScale(rates: number[]): RateColorScale {
   const farm = rates.filter((r) => Number.isFinite(r) && !isBossExclusiveDrop(r))
@@ -26,10 +29,18 @@ export function fitRateColorScale(rates: number[]): RateColorScale {
 
   let min = Math.min(...farm)
   let max = Math.max(...farm)
+  const mid = (min + max) / 2
+  // At least ~1% absolute span (or half the mid rate), so close farm bands stay similar.
+  const minSpan = Math.max(1, mid * 0.5)
+  const span = max - min
 
-  if (max - min < 0.05) {
-    min = Math.max(0, min - 0.25)
-    max = Math.min(FARM_DROP_RATE_CAP, max + 0.25)
+  if (span < minSpan) {
+    const pad = (minSpan - span) / 2
+    min = Math.max(0, min - pad)
+    max = Math.min(FARM_DROP_RATE_CAP, max + pad)
+    if (max - min < minSpan) {
+      max = Math.min(FARM_DROP_RATE_CAP, min + minSpan)
+    }
   }
   return { min, max }
 }

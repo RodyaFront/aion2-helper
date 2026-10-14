@@ -17,7 +17,20 @@ if (fs.existsSync(portable)) {
 }
 
 if (fs.existsSync(unpacked)) {
-  fs.rmSync(fastDir, { recursive: true, force: true })
+  try {
+    fs.rmSync(fastDir, { recursive: true, force: true })
+  }
+  catch (err) {
+    const code = err && typeof err === 'object' && 'code' in err ? err.code : ''
+    if (code === 'EBUSY' || code === 'EPERM') {
+      console.warn(
+        'Skip unpacked copy: dist/AionBossTracker is locked (close AionBossTracker.exe and re-run: node scripts/copy-dist.mjs)',
+      )
+      process.exitCode = 0
+      process.exit(0)
+    }
+    throw err
+  }
   fs.cpSync(unpacked, fastDir, { recursive: true })
   const readme = path.join(fastDir, 'START-HERE.txt')
   fs.writeFileSync(

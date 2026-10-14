@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BellOff, Plus, Settings, X } from '@lucide/vue'
+import { BellOff, Plus, X } from '@lucide/vue'
 import { formatCountdown } from '../../shared/bosses'
 import { useBossStore, type FilterMode } from '../../stores/bosses'
 import { useRiftStore } from '../../stores/rift'
@@ -10,7 +10,6 @@ const store = useBossStore()
 const rift = useRiftStore()
 const searchRef = ref<{ focus: () => void } | null>(null)
 const showAdd = ref(false)
-const showSettings = ref(false)
 
 const filters: Array<{ id: FilterMode, label: string }> = [
   { id: 'all', label: 'Все' },
@@ -41,7 +40,7 @@ const emptyCopy = computed(() => {
 })
 
 function onSlashFocus(e: KeyboardEvent) {
-  if (showSettings.value || showAdd.value) return
+  if (showAdd.value) return
   if (e.key === '/' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
     e.preventDefault()
     searchRef.value?.focus()
@@ -58,51 +57,25 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="app-shell">
-    <header class="app-chrome">
-      <div class="chrome-brand">
-        <p class="brand-mark">AION 2 · Lamuatan</p>
-        <h1 class="chrome-title">Трекер боссов · Verteron</h1>
-      </div>
-
-      <nav class="chrome-nav" aria-label="Разделы">
-        <NuxtLink to="/" class="chrome-nav-link is-active">
-          Боссы
-        </NuxtLink>
-        <NuxtLink to="/items" class="chrome-nav-link">
-          Предметы
-        </NuxtLink>
-      </nav>
-
-      <div class="chrome-stats" aria-label="Сводка">
-        <div class="stat">
-          <span class="stat-label">Перерождаются</span>
-          <span class="stat-value">{{ store.activeCount }}</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Готовы</span>
-          <span class="stat-value is-ready">{{ store.readyCount }}</span>
-        </div>
-        <div class="stat chrome-stat-next">
-          <span class="stat-label">Ближайший</span>
-          <span class="stat-value is-next">{{ nextLabel }}</span>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        class="btn btn-sm btn-ghost btn-icon chrome-settings"
-        aria-label="Настройки"
-        title="Настройки"
-        @click="showSettings = true"
-      >
-        <Settings class="ui-icon" aria-hidden="true" />
-      </button>
-    </header>
-
+  <div class="page-bosses">
     <div class="app-body">
       <div class="app-primary">
         <div class="tracker-bar">
+          <div class="boss-stats" aria-label="Сводка таймеров">
+            <div class="stat">
+              <span class="stat-label">Перерождаются</span>
+              <span class="stat-value">{{ store.activeCount }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Готовы</span>
+              <span class="stat-value is-ready">{{ store.readyCount }}</span>
+            </div>
+            <div class="stat boss-stat-next">
+              <span class="stat-label">Ближайший</span>
+              <span class="stat-value is-next">{{ nextLabel }}</span>
+            </div>
+          </div>
+
           <div class="toolbar">
             <AppSearchInput
               ref="searchRef"
@@ -210,14 +183,5 @@ onBeforeUnmount(() => {
     </div>
 
     <AddBossModal v-model:open="showAdd" />
-
-    <UiAppModal
-      v-model:open="showSettings"
-      title="Настройки"
-      description="Локально на этом ПК. Сохраняется автоматически."
-      size="lg"
-    >
-      <SettingsPanel />
-    </UiAppModal>
   </div>
 </template>

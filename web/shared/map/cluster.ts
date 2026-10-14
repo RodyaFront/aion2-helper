@@ -3,8 +3,8 @@ import { isBossExclusiveDrop } from './rateColor'
 import type { ClusterViewport, IClusterStrategy, IMapMarker } from './types'
 
 /**
- * Clusters nearby spawn markers that share the same mobId.
- * Different mob types never merge. Rates >50% never cluster or enter range calc.
+ * Clusters nearby spawn markers that share the same mobId via a world grid (O(n)).
+ * Different mob types never merge. Boss-exclusive rates (>15%) never cluster.
  */
 export class SameMobTypeZoomCluster implements IClusterStrategy {
   constructor(
@@ -15,9 +15,17 @@ export class SameMobTypeZoomCluster implements IClusterStrategy {
   cluster(markers: IMapMarker[], scale: number, _viewport: ClusterViewport): IMapMarker[] {
     if (markers.length === 0) return []
     const s = Math.max(scale, 0.0001)
-    const worldRadius = this.screenRadiusPx / s
+    // Cell ≈ merge radius in world units (matches previous screen-radius intent).
+    const cellSize = Math.max(this.screenRadiusPx / s, 1e-3)
 
-    const byMob = new Map<string, IMapMarker[]>()
+    type Bucket = {
+      mobId: string
+      members: IMapMarker[]
+      cellX: number
+      cellY: number
+    }
+
+    const buckets = new Map<string, Bucket>()
     const passthrough: IMapMarker[] = []
 
     for (const m of markers) {
@@ -31,78 +39,54 @@ export class SameMobTypeZoomCluster implements IClusterStrategy {
         passthrough.push(m)
         continue
       }
-      const list = byMob.get(m.mobId) ?? []
-      list.push(m)
-      byMob.set(m.mobId, list)
+      const cellX = Math.floor(m.point.mapX / cellSize)
+      const cellY = Math.floor(m.point.mapY / cellSize)
+      const key = `${m.mobId}:${cellX}:${cellY}`
+      let bucket = buckets.get(key)
+      if (!bucket) {
+        bucket = { mobId: m.mobId, members: [], cellX, cellY }
+        buckets.set(key, bucket)
+      }
+      bucket.members.push(m)
     }
 
     const out: IMapMarker[] = [...passthrough]
-    for (const [mobId, group] of byMob) {
-      out.push(...clusterGroup(mobId, group, worldRadius))
+    for (const bucket of buckets.values()) {
+      out.push(...bucketToMarkers(bucket.mobId, bucket.members, bucket.cellX, bucket.cellY))
     }
     return out
   }
 }
 
-function clusterGroup(mobId: string, markers: IMapMarker[], worldRadius: number): IMapMarker[] {
-  const remaining = [...markers]
-  const result: IMapMarker[] = []
-  let clusterSeq = 0
+function bucketToMarkers(
+  mobId: string,
+  members: IMapMarker[],
+  cellX: number,
+  cellY: number,
+): IMapMarker[] {
+  if (members.length === 1) return [members[0]!]
 
-  while (remaining.length > 0) {
-    const seed = remaining.shift()!
-    const members = [seed]
-    let changed = true
-    while (changed) {
-      changed = false
-      for (let i = remaining.length - 1; i >= 0; i--) {
-        const candidate = remaining[i]!
-        if (members.some((m) => dist(m, candidate) <= worldRadius)) {
-          members.push(candidate)
-          remaining.splice(i, 1)
-          changed = true
-        }
-      }
-    }
+  const rates = members
+    .map((m) => m.rate!)
+    .filter((r) => Number.isFinite(r) && !isBossExclusiveDrop(r))
+  if (rates.length === 0) return members
 
-    if (members.length === 1) {
-      result.push(members[0]!)
-      continue
-    }
+  const minRate = Math.min(...rates)
+  const maxRate = Math.max(...rates)
+  const cx = members.reduce((sum, m) => sum + m.point.mapX, 0) / members.length
+  const cy = members.reduce((sum, m) => sum + m.point.mapY, 0) / members.length
+  const name = members.find((m) => m instanceof DropChanceMarker)?.mobName
+    ?? (members[0] as DropChanceMarker | undefined)?.mobName
 
-    const rates = members
-      .map((m) => m.rate!)
-      .filter((r) => Number.isFinite(r) && !isBossExclusiveDrop(r))
-    if (rates.length === 0) {
-      result.push(...members)
-      continue
-    }
-
-    const minRate = Math.min(...rates)
-    const maxRate = Math.max(...rates)
-    const cx = members.reduce((sum, m) => sum + m.point.mapX, 0) / members.length
-    const cy = members.reduce((sum, m) => sum + m.point.mapY, 0) / members.length
-    const name = members.find((m) => m instanceof DropChanceMarker)?.mobName
-      ?? (members[0] as DropChanceMarker | undefined)?.mobName
-
-    result.push(
-      new DropClusterMarker(
-        `cluster:${mobId}:${clusterSeq++}`,
-        { mapX: cx, mapY: cy },
-        mobId,
-        minRate,
-        maxRate,
-        members.length,
-        name,
-      ),
-    )
-  }
-
-  return result
-}
-
-function dist(a: IMapMarker, b: IMapMarker): number {
-  const dx = a.point.mapX - b.point.mapX
-  const dy = a.point.mapY - b.point.mapY
-  return Math.hypot(dx, dy)
+  return [
+    new DropClusterMarker(
+      `cluster:${mobId}:${cellX}:${cellY}`,
+      { mapX: cx, mapY: cy },
+      mobId,
+      minRate,
+      maxRate,
+      members.length,
+      name,
+    ),
+  ]
 }

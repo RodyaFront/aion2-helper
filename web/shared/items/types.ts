@@ -21,6 +21,9 @@ export type ItemDef = {
   dropSourceCount: number
   verteronSpawnCount: number
   hasVerteronMap: boolean
+  /** Verteron Resources-layer spawn points (gather nodes). */
+  gatherSpawnCount?: number
+  hasGatherMap?: boolean
 }
 
 export type DropSource = {
@@ -109,7 +112,7 @@ export type ItemFilterInput = {
   category: string
   itemType: string
   grade: string
-  /** Only items with local Verteron drop markers (map modal). */
+  /** Only items with local Verteron drop or gather markers. */
   onlyWithDropPoints: boolean
   /** Hide skins / titles / pets / wings / decor by default. */
   hideCosmetics: boolean

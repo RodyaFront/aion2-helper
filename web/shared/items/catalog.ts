@@ -1,7 +1,7 @@
 import { shallowRef } from 'vue'
-import { DropChanceMarker } from '../map/markers'
+import { DropChanceMarker, GatherNodeMarker } from '../map/markers'
 import { createMapScene } from '../map/scene'
-import type { MapScene } from '../map/types'
+import type { MapPoint, MapScene } from '../map/types'
 import { VERTERON_MAP_DEFINITION } from '../map/verteron'
 import freshRawMeatDrops from './drops/fresh_raw_meat.json'
 import rawLeatherDrops from './drops/raw_leather.json'
@@ -64,9 +64,28 @@ type DropIndexFile = {
   items: Record<string, { mobId: string, rate: number }[]>
 }
 
+type GatherIndexLayer = {
+  nameEn: string
+  nameRu?: string | null
+  icon?: string | null
+  iconUrl?: string | null
+  itemIds: string[]
+  spawns: MapPoint[]
+}
+
+type GatherIndexFile = {
+  scrapedAt?: string
+  source?: string
+  layers: Record<string, GatherIndexLayer>
+  items: Record<string, string>
+}
+
 let dropIndex: DropIndexFile | null = null
 let dropIndexPromise: Promise<DropIndexFile | null> | null = null
 const composedDropCache = new Map<string, ItemDropFile | null>()
+
+let gatherIndex: GatherIndexFile | null = null
+let gatherIndexPromise: Promise<GatherIndexFile | null> | null = null
 
 /** Eager map of ./mobs/{mobId}.json → loot table. */
 const mobLootModules = import.meta.glob('./mobs/*.json', { eager: true, import: 'default' }) as Record<
@@ -222,9 +241,53 @@ export async function ensureItemDropIndex(): Promise<DropIndexFile | null> {
   return dropIndexPromise
 }
 
+export async function ensureItemGatherIndex(): Promise<GatherIndexFile | null> {
+  if (gatherIndex) return gatherIndex
+  if (gatherIndexPromise) return gatherIndexPromise
+
+  gatherIndexPromise = (async () => {
+    const res = await fetch(publicDataUrl('item-gather-index.json'), {
+      headers: { accept: 'application/json' },
+    })
+    if (!res.ok) {
+      console.warn(`Item gather index HTTP ${res.status}`)
+      return null
+    }
+    const data = (await res.json()) as GatherIndexFile
+    gatherIndex = data
+    return data
+  })().catch((err: unknown) => {
+    console.warn('Item gather index failed', err)
+    gatherIndexPromise = null
+    return null
+  })
+
+  return gatherIndexPromise
+}
+
+export function getGatherLayerForItem(itemId: string): GatherIndexLayer | null {
+  if (!gatherIndex) return null
+  const layerId = gatherIndex.items[itemId]
+  if (!layerId) return null
+  return gatherIndex.layers[layerId] ?? null
+}
+
+export function itemHasMap(item: ItemDef): boolean {
+  return Boolean(item.hasVerteronMap || item.hasGatherMap)
+}
+
+function normalizeCatalogItem(item: ItemDef): ItemDef {
+  return {
+    ...item,
+    gatherSpawnCount: item.gatherSpawnCount ?? 0,
+    hasGatherMap: Boolean(item.hasGatherMap),
+  }
+}
+
 export async function ensureItemCatalog(): Promise<ItemDef[]> {
   if (catalogStatus.value === 'ready' && catalogItems.value.length) {
     void ensureItemDropIndex()
+    void ensureItemGatherIndex()
     return catalogItems.value
   }
   if (loadPromise) return loadPromise
@@ -236,10 +299,11 @@ export async function ensureItemCatalog(): Promise<ItemDef[]> {
     const [res] = await Promise.all([
       fetch(publicDataUrl('items-catalog.json'), { headers: { accept: 'application/json' } }),
       ensureItemDropIndex(),
+      ensureItemGatherIndex(),
     ])
     if (!res.ok) throw new Error(`Catalog HTTP ${res.status}`)
     const data = (await res.json()) as ItemCatalogFile
-    const items = Array.isArray(data.items) ? data.items : []
+    const items = (Array.isArray(data.items) ? data.items : []).map(normalizeCatalogItem)
     catalogItems.value = items
     syncItemsExport(items)
     catalogMeta.value = {
@@ -363,7 +427,9 @@ function sortItems(list: ItemDef[], sort: ItemSortKey): ItemDef[] {
       case 'id':
         return a.itemId.localeCompare(b.itemId, 'en', { numeric: true })
       case 'map': {
-        if (a.hasVerteronMap !== b.hasVerteronMap) return a.hasVerteronMap ? -1 : 1
+        const aMap = itemHasMap(a)
+        const bMap = itemHasMap(b)
+        if (aMap !== bMap) return aMap ? -1 : 1
         return compareByLocalizedName(a, b)
       }
       case 'name':
@@ -390,7 +456,7 @@ export function filterItems(
     if (gradeKey && gradeKey !== 'unknown' && normalizeItemGrade(item.grade) !== gradeKey) {
       return false
     }
-    if (input.onlyWithDropPoints && !item.hasVerteronMap) return false
+    if (input.onlyWithDropPoints && !itemHasMap(item)) return false
     if (!q) return true
     const hay = normalizeSearch(
       `${item.nameEn} ${item.nameRu} ${item.itemId} ${item.category} ${item.categoryName || ''}`,
@@ -495,6 +561,42 @@ export function createItemDropMapScene(
     focusLabel: 'Все точки',
     hintExtra: markers.length
       ? `${markers.length} точек · клик по % — карточка моба`
+      : undefined,
+  })
+}
+
+export function getItemGatherMarkers(itemId: string): GatherNodeMarker[] {
+  if (!gatherIndex) return []
+  const layerId = gatherIndex.items[itemId]
+  if (!layerId) return []
+  const layer = gatherIndex.layers[layerId]
+  if (!layer?.spawns?.length) return []
+  const name = layer.nameRu || layer.nameEn
+  const iconUrl = layer.iconUrl ?? null
+  return layer.spawns.map((pt, idx) =>
+    new GatherNodeMarker(
+      `${layerId}:${idx}`,
+      pt,
+      layerId,
+      name,
+      iconUrl,
+    ),
+  )
+}
+
+export function createItemGatherMapScene(item: ItemDef): MapScene {
+  let markers = getItemGatherMarkers(item.itemId)
+  if (!markers.length && item.id !== item.itemId) {
+    markers = getItemGatherMarkers(item.id)
+  }
+  return createMapScene({
+    map: VERTERON_MAP_DEFINITION,
+    markers,
+    focusPoint: null,
+    emptyMessage: 'Нет точек сбора на карте Verteron.',
+    focusLabel: 'Все точки',
+    hintExtra: markers.length
+      ? `${markers.length} точек сбора`
       : undefined,
   })
 }

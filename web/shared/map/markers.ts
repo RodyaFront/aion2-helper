@@ -132,6 +132,52 @@ export class DropClusterMarker implements IMapMarker {
   }
 }
 
+/** Single gather node; mobId holds the Resources layer id for clustering. */
+export class GatherNodeMarker implements IMapMarker {
+  readonly kind = 'gather' as const
+
+  constructor(
+    public readonly id: string,
+    public readonly point: MapPoint,
+    public readonly mobId: string,
+    public readonly resourceName: string,
+    public readonly iconUrl: string | null,
+  ) {}
+
+  renderModel(): MarkerRenderModel {
+    return {
+      kind: 'gather',
+      label: this.resourceName,
+      title: this.resourceName,
+      iconUrl: this.iconUrl,
+    }
+  }
+}
+
+/** Nearby gather nodes of the same layer merged into one chip. */
+export class GatherClusterMarker implements IMapMarker {
+  readonly kind = 'gather' as const
+
+  constructor(
+    public readonly id: string,
+    public readonly point: MapPoint,
+    public readonly mobId: string,
+    public readonly count: number,
+    public readonly resourceName: string,
+    public readonly iconUrl: string | null,
+  ) {}
+
+  renderModel(): MarkerRenderModel {
+    return {
+      kind: 'gather',
+      label: this.resourceName,
+      title: `${this.resourceName} · ×${this.count}`,
+      count: this.count,
+      iconUrl: this.iconUrl,
+    }
+  }
+}
+
 export {
   formatRate,
   formatRatePrecise,

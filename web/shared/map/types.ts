@@ -21,7 +21,7 @@ export type MapDefinition = {
   attribution?: string
 }
 
-export type MarkerKind = 'pin' | 'percent' | 'cluster'
+export type MarkerKind = 'pin' | 'percent' | 'cluster' | 'gather'
 
 export type MarkerRenderModel = {
   kind: MarkerKind
@@ -34,6 +34,8 @@ export type MarkerRenderModel = {
   accentInk?: string
   /** Boss-only outlier (>50%): never clustered. */
   bossExclusive?: boolean
+  /** Gather node / gather-cluster chip icon. */
+  iconUrl?: string | null
 }
 
 export interface IMapMarker {

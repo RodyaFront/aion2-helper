@@ -170,9 +170,9 @@ const clusteredMarkers = computed((): IMapMarker[] => {
   })
 })
 
-/** Mob count for ×N (cluster size); singles count as 1. */
+/** Mob/gather count for ×N (cluster size); singles count as 1. */
 function markerMobCount(marker: IMapMarker): number {
-  if (marker.kind === 'cluster') {
+  if (marker.kind === 'cluster' || marker.kind === 'gather') {
     return marker.renderModel(rateScale.value).count ?? 1
   }
   return 1
@@ -335,7 +335,7 @@ const markerModelsById = computed(() => {
 const countScale = computed(() => {
   const counts: number[] = []
   for (const m of visibleMarkers.value) {
-    if (m.kind !== 'cluster') continue
+    if (m.kind !== 'cluster' && m.kind !== 'gather') continue
     const c = markerModelsById.value.get(m.id)?.count
     if (c != null && c >= 2) counts.push(c)
   }
@@ -413,6 +413,8 @@ function onMarkerEnter(marker: IMapMarker) {
   hoveredMarkerId.value = marker.id
   focusMarkerId.value = marker.id
   if (spiderOffsets.value.size > 0) return
+  // Gather chips use native title + ×N; no mob stack popover.
+  if (marker.kind === 'gather') return
   openStackPopover(marker)
 }
 
@@ -443,7 +445,7 @@ function selectStackMember(marker: IMapMarker) {
 }
 
 function openMarkerDetail(marker: IMapMarker) {
-  if (marker.kind === 'pin' || !marker.mobId) return
+  if (marker.kind === 'pin' || marker.kind === 'gather' || !marker.mobId) return
   focusMarkerId.value = marker.id
   hoveredMarkerId.value = marker.id
   emit('select-marker', marker)
@@ -522,7 +524,11 @@ function markerStyle(marker: IMapMarker) {
   if (highlight) z += 1000
 
   let countAccentValue: number | null = null
-  if (marker.kind === 'cluster' && model.count != null && model.count >= 2) {
+  if (
+    (marker.kind === 'cluster' || marker.kind === 'gather')
+    && model.count != null
+    && model.count >= 2
+  ) {
     countAccentValue = model.count
   }
   else if (layout?.isTop && layout.size >= 2) {
@@ -742,6 +748,24 @@ watch(
           <template v-if="marker.kind === 'pin'">
             <span class="boss-map-marker-pin" aria-hidden="true" />
             <span class="boss-map-marker-label">{{ markerModel(marker).label }}</span>
+          </template>
+          <template v-else-if="marker.kind === 'gather'">
+            <span class="boss-map-marker-badge">
+              <span class="boss-map-marker-chip boss-map-marker-chip--icon">
+                <img
+                  v-if="markerModel(marker).iconUrl"
+                  class="boss-map-marker-icon"
+                  :src="markerModel(marker).iconUrl!"
+                  alt=""
+                  draggable="false"
+                >
+                <span v-else>{{ markerModel(marker).label.slice(0, 1) }}</span>
+              </span>
+              <span
+                v-if="markerModel(marker).count && markerModel(marker).count! >= 2"
+                class="boss-map-marker-mult"
+              >×{{ markerModel(marker).count }}</span>
+            </span>
           </template>
           <template v-else>
             <span class="boss-map-marker-badge">

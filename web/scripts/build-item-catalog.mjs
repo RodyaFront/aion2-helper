@@ -65,6 +65,8 @@ for (const en of enList) {
     dropSourceCount: old?.dropSourceCount ?? 0,
     verteronSpawnCount: old?.verteronSpawnCount ?? 0,
     hasVerteronMap: Boolean(old?.hasVerteronMap),
+    gatherSpawnCount: old?.gatherSpawnCount ?? 0,
+    hasGatherMap: Boolean(old?.hasGatherMap),
   })
 }
 

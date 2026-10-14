@@ -1,4 +1,4 @@
-import { DropChanceMarker, DropClusterMarker } from './markers'
+import { DropChanceMarker, DropClusterMarker, GatherClusterMarker, GatherNodeMarker } from './markers'
 import { isBossExclusiveDrop } from './rateColor'
 import type { ClusterViewport, IClusterStrategy, IMapMarker } from './types'
 
@@ -87,6 +87,84 @@ function bucketToMarkers(
       maxRate,
       members.length,
       name,
+    ),
+  ]
+}
+
+/**
+ * Clusters nearby gather nodes that share the same Resources layer id (mobId).
+ */
+export class SameGatherLayerCluster implements IClusterStrategy {
+  constructor(
+    public readonly screenRadiusPx = 36,
+  ) {}
+
+  cluster(markers: IMapMarker[], scale: number, _viewport: ClusterViewport): IMapMarker[] {
+    if (markers.length === 0) return []
+    const s = Math.max(scale, 0.0001)
+    const cellSize = Math.max(this.screenRadiusPx / s, 1e-3)
+
+    type Bucket = {
+      layerId: string
+      members: IMapMarker[]
+      cellX: number
+      cellY: number
+    }
+
+    const buckets = new Map<string, Bucket>()
+    const passthrough: IMapMarker[] = []
+
+    for (const m of markers) {
+      if (m.kind !== 'gather' || !m.mobId || m.skipCluster) {
+        passthrough.push(m)
+        continue
+      }
+      const cellX = Math.floor(m.point.mapX / cellSize)
+      const cellY = Math.floor(m.point.mapY / cellSize)
+      const key = `${m.mobId}:${cellX}:${cellY}`
+      let bucket = buckets.get(key)
+      if (!bucket) {
+        bucket = { layerId: m.mobId, members: [], cellX, cellY }
+        buckets.set(key, bucket)
+      }
+      bucket.members.push(m)
+    }
+
+    const out: IMapMarker[] = [...passthrough]
+    for (const bucket of buckets.values()) {
+      out.push(...gatherBucketToMarkers(bucket.layerId, bucket.members, bucket.cellX, bucket.cellY))
+    }
+    return out
+  }
+}
+
+function gatherBucketToMarkers(
+  layerId: string,
+  members: IMapMarker[],
+  cellX: number,
+  cellY: number,
+): IMapMarker[] {
+  if (members.length === 1) return [members[0]!]
+
+  const seed = members.find((m) => m instanceof GatherNodeMarker) as GatherNodeMarker | undefined
+    ?? members.find((m) => m instanceof GatherClusterMarker) as GatherClusterMarker | undefined
+  const name = seed?.resourceName ?? layerId
+  const iconUrl = seed?.iconUrl ?? null
+  const count = members.reduce((sum, m) => {
+    if (m instanceof GatherClusterMarker) return sum + m.count
+    return sum + 1
+  }, 0)
+  const cx = members.reduce((sum, m) => sum + m.point.mapX, 0) / members.length
+  const cy = members.reduce((sum, m) => sum + m.point.mapY, 0) / members.length
+
+  return [
+    new GatherClusterMarker(
+      `gather:${layerId}:${cellX}:${cellY}`,
+      { mapX: cx, mapY: cy },
+      layerId,
+      count,
+      name,
+      iconUrl,
     ),
   ]
 }

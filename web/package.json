@@ -20,6 +20,7 @@
     "items:scrape": "node scripts/scrape-dbaion2-items.mjs && node scripts/merge-item-page-verteron.mjs",
     "items:catalog": "node scripts/build-item-catalog.mjs",
     "items:drop-index": "node scripts/build-item-drop-index.mjs",
+    "items:gather-index": "node scripts/build-item-gather-index.mjs",
     "items:shared45": "node scripts/build-shared-level-45.mjs",
     "fetch:images": "python ../scripts/fetch-boss-images.py",
     "sounds:generate": "python scripts/generate-alert-sounds.py",

@@ -8,7 +8,9 @@ import {
   catalogStatus,
   ensureItemCatalog,
   ensureItemDropIndex,
+  ensureItemGatherIndex,
   filterItems,
+  itemHasMap,
   type ItemFilterInput,
   type ItemSortKey,
 } from '../../../shared/items/catalog'
@@ -16,6 +18,7 @@ import { gradeClass } from '../../../shared/items/grade'
 import { itemLocalizedName, itemSecondaryName } from '../../../shared/items/i18n'
 import type { ItemDef } from '../../../shared/items/types'
 import ItemDropMapModal from '../../components/ItemDropMapModal.vue'
+import ItemGatherMapModal from '../../components/ItemGatherMapModal.vue'
 import ItemIcon from '../../components/ItemIcon.vue'
 import AppFilterSelect from '../../components/ui/AppFilterSelect.vue'
 import AppSearchInput from '../../components/ui/AppSearchInput.vue'
@@ -33,6 +36,7 @@ const hideCosmetics = ref(true)
 const sort = ref('name')
 const mapItem = ref<ItemDef | null>(null)
 const showMap = ref(false)
+const mapMode = ref<'drop' | 'gather'>('drop')
 const searchRef = ref<{ focus: () => void } | null>(null)
 const listRef = ref<{ scrollToIndex: (i: number) => void } | null>(null)
 const activeIndex = ref(-1)
@@ -62,7 +66,7 @@ const sortOptions = [
   { value: 'name', label: 'Имя' },
   { value: 'grade', label: 'Редкость' },
   { value: 'level', label: 'Уровень' },
-  { value: 'map', label: 'Сначала с точками дропа' },
+  { value: 'map', label: 'Сначала с точками' },
   { value: 'id', label: 'ID' },
 ]
 
@@ -136,7 +140,7 @@ const categoryOptions = computed(() => [
 const totalCount = computed(() => catalogMeta.value?.count ?? catalogItems.value.length)
 
 const dropPointsCount = computed(
-  () => catalogItems.value.filter((item) => item.hasVerteronMap).length,
+  () => catalogItems.value.filter((item) => itemHasMap(item)).length,
 )
 
 const hasActiveFilters = computed(() =>
@@ -163,14 +167,22 @@ const scrapedLabel = computed(() => {
 })
 
 async function openMap(item: ItemDef) {
-  if (!item.hasVerteronMap) return
-  await ensureItemDropIndex()
+  if (!itemHasMap(item)) return
+  // Prefer drop map when both flags set (rare); gather otherwise.
+  if (item.hasVerteronMap) {
+    await ensureItemDropIndex()
+    mapMode.value = 'drop'
+  }
+  else {
+    await ensureItemGatherIndex()
+    mapMode.value = 'gather'
+  }
   mapItem.value = item
   showMap.value = true
 }
 
 function onRowActivate(item: ItemDef) {
-  if (item.hasVerteronMap) openMap(item)
+  if (itemHasMap(item)) openMap(item)
   else if (item.sourceUrl) window.open(item.sourceUrl, '_blank', 'noopener,noreferrer')
 }
 
@@ -214,7 +226,7 @@ function onListKeydown(e: KeyboardEvent) {
     const item = activeIndex.value >= 0
       ? filtered.value[activeIndex.value]
       : null
-    if (item?.hasVerteronMap) {
+    if (item && itemHasMap(item)) {
       e.preventDefault()
       openMap(item)
     }
@@ -280,15 +292,15 @@ onBeforeUnmount(() => {
               <label
                 class="items-opt"
                 :title="dropPointsCount
-                  ? 'Предметы с локальными точками дропа на карте Verteron'
-                  : 'Пока нет предметов с точками дропа'"
+                  ? 'Предметы с точками дропа или сбора на карте Verteron'
+                  : 'Пока нет предметов с точками на карте'"
               >
                 <input
                   v-model="onlyWithDropPoints"
                   type="checkbox"
                   :disabled="dropPointsCount === 0"
                 >
-                С точками дропа
+                С точками
                 <span class="items-opt-count">{{ dropPointsCount }}</span>
               </label>
               <button
@@ -405,7 +417,7 @@ onBeforeUnmount(() => {
                   class="item-row"
                   :class="{
                     'is-active': index === activeIndex,
-                    'has-map': item.hasVerteronMap,
+                    'has-map': itemHasMap(item),
                   }"
                   @click="activeIndex = index"
                   @dblclick="onRowActivate(item)"
@@ -443,10 +455,10 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="items-col-actions">
                     <button
-                      v-if="item.hasVerteronMap"
+                      v-if="itemHasMap(item)"
                       type="button"
                       class="btn btn-sm"
-                      title="Показать на карте"
+                      :title="item.hasVerteronMap ? 'Карта дропа' : 'Карта сбора'"
                       @click.stop="openMap(item)"
                     >
                       <MapPin
@@ -495,7 +507,12 @@ onBeforeUnmount(() => {
     </div>
 
     <ItemDropMapModal
-      v-if="mapItem"
+      v-if="mapItem && mapMode === 'drop'"
+      v-model:open="showMap"
+      :item="mapItem"
+    />
+    <ItemGatherMapModal
+      v-if="mapItem && mapMode === 'gather'"
       v-model:open="showMap"
       :item="mapItem"
     />

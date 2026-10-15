@@ -524,14 +524,11 @@ function markerStyle(marker: IMapMarker) {
   if (highlight) z += 1000
 
   let countAccentValue: number | null = null
-  if (
-    (marker.kind === 'cluster' || marker.kind === 'gather')
-    && model.count != null
-    && model.count >= 2
-  ) {
+  // Gather ×N uses its own shadow text; rate chips keep count accent.
+  if (marker.kind === 'cluster' && model.count != null && model.count >= 2) {
     countAccentValue = model.count
   }
-  else if (layout?.isTop && layout.size >= 2) {
+  else if (marker.kind !== 'gather' && layout?.isTop && layout.size >= 2) {
     countAccentValue = layout.size
   }
 
@@ -750,20 +747,21 @@ watch(
             <span class="boss-map-marker-label">{{ markerModel(marker).label }}</span>
           </template>
           <template v-else-if="marker.kind === 'gather'">
-            <span class="boss-map-marker-badge">
-              <span class="boss-map-marker-chip boss-map-marker-chip--icon">
-                <img
-                  v-if="markerModel(marker).iconUrl"
-                  class="boss-map-marker-icon"
-                  :src="markerModel(marker).iconUrl!"
-                  alt=""
-                  draggable="false"
-                >
-                <span v-else>{{ markerModel(marker).label.slice(0, 1) }}</span>
-              </span>
+            <span class="boss-map-marker-gather">
+              <img
+                v-if="markerModel(marker).iconUrl"
+                class="boss-map-marker-gather-icon"
+                :src="markerModel(marker).iconUrl!"
+                alt=""
+                draggable="false"
+              >
+              <span
+                v-else
+                class="boss-map-marker-gather-fallback"
+              >{{ markerModel(marker).label.slice(0, 1) }}</span>
               <span
                 v-if="markerModel(marker).count && markerModel(marker).count! >= 2"
-                class="boss-map-marker-mult"
+                class="boss-map-marker-gather-mult"
               >×{{ markerModel(marker).count }}</span>
             </span>
           </template>

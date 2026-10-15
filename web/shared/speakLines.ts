@@ -58,6 +58,6 @@ export function riftWarnSpeech(mins: number): SpeechPayload {
 
 export function riftOpenSpeech(): SpeechPayload {
   return {
-    ru: 'Разлом открыт. Портал на противоположную расу. Вход около десяти минут.',
+    ru: 'Разлом открыт.',
   }
 }

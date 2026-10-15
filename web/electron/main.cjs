@@ -184,9 +184,14 @@ function startStaticServer(root) {
             return
           }
           const ext = path.extname(filePath).toLowerCase()
+          // Hashed /_nuxt/* can be cached; /data/*.json keeps a stable URL — never cache it
+          // or updates (gather maps, drop index) stay invisible for up to max-age.
+          const cacheControl = ext === '.html' || ext === '.json'
+            ? 'no-store'
+            : 'public, max-age=86400'
           res.writeHead(200, {
             'Content-Type': MIME[ext] || 'application/octet-stream',
-            'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=86400',
+            'Cache-Control': cacheControl,
           })
           res.end(data)
         })
@@ -280,6 +285,8 @@ async function createWindow() {
   mainWindow.show()
 
   try {
+    // Drop stale /data/*.json from the fixed-origin disk cache (same port every launch).
+    await mainWindow.webContents.session.clearCache()
     const url = await ensureStaticUrl(root)
     await mainWindow.loadURL(url)
   }

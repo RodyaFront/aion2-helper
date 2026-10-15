@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
         role="status"
       >
         <strong>{{ rift.toast.title }}</strong>
-        <span>{{ rift.toast.body }}</span>
+        <span v-if="rift.toast.body">{{ rift.toast.body }}</span>
         <div class="toast-actions">
           <button
             type="button"

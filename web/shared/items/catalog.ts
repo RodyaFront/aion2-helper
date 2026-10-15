@@ -222,6 +222,7 @@ export async function ensureItemDropIndex(): Promise<DropIndexFile | null> {
 
   dropIndexPromise = (async () => {
     const res = await fetch(publicDataUrl('item-drop-index.json'), {
+      cache: 'no-store',
       headers: { accept: 'application/json' },
     })
     if (!res.ok) {
@@ -247,6 +248,7 @@ export async function ensureItemGatherIndex(): Promise<GatherIndexFile | null> {
 
   gatherIndexPromise = (async () => {
     const res = await fetch(publicDataUrl('item-gather-index.json'), {
+      cache: 'no-store',
       headers: { accept: 'application/json' },
     })
     if (!res.ok) {
@@ -297,7 +299,10 @@ export async function ensureItemCatalog(): Promise<ItemDef[]> {
 
   loadPromise = (async () => {
     const [res] = await Promise.all([
-      fetch(publicDataUrl('items-catalog.json'), { headers: { accept: 'application/json' } }),
+      fetch(publicDataUrl('items-catalog.json'), {
+        cache: 'no-store',
+        headers: { accept: 'application/json' },
+      }),
       ensureItemDropIndex(),
       ensureItemGatherIndex(),
     ])

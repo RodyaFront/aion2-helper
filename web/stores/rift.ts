@@ -165,12 +165,11 @@ export const useRiftStore = defineStore('rift', {
 
     alertOpened() {
       const title = 'Разлом открыт'
-      const body = 'Портал на противоположную расу. Вход ~10 мин.'
       this.toast = {
         id: `rift-open-${this.windowStartAt ?? 'manual'}-${Date.now()}`,
         kind: 'open',
         title,
-        body,
+        body: '',
         speech: riftOpenSpeech(),
       }
     },

@@ -154,6 +154,52 @@ export class GatherNodeMarker implements IMapMarker {
   }
 }
 
+/** Monster spawn pin: portrait icon, same chrome as a gather node. */
+export class PortraitNodeMarker implements IMapMarker {
+  readonly kind = 'portrait' as const
+
+  constructor(
+    public readonly id: string,
+    public readonly point: MapPoint,
+    public readonly mobId: string,
+    public readonly mobName: string,
+    public readonly iconUrl: string | null,
+  ) {}
+
+  renderModel(): MarkerRenderModel {
+    return {
+      kind: 'portrait',
+      label: this.mobName,
+      title: this.mobName,
+      iconUrl: this.iconUrl,
+    }
+  }
+}
+
+/** Nearby spawns of the same mob merged into one portrait chip. */
+export class PortraitClusterMarker implements IMapMarker {
+  readonly kind = 'portrait' as const
+
+  constructor(
+    public readonly id: string,
+    public readonly point: MapPoint,
+    public readonly mobId: string,
+    public readonly count: number,
+    public readonly mobName: string,
+    public readonly iconUrl: string | null,
+  ) {}
+
+  renderModel(): MarkerRenderModel {
+    return {
+      kind: 'portrait',
+      label: this.mobName,
+      title: `${this.mobName} · ×${this.count}`,
+      count: this.count,
+      iconUrl: this.iconUrl,
+    }
+  }
+}
+
 /** Nearby gather nodes of the same layer merged into one chip. */
 export class GatherClusterMarker implements IMapMarker {
   readonly kind = 'gather' as const

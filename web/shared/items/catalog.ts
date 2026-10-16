@@ -1,5 +1,5 @@
 import { shallowRef } from 'vue'
-import { DropChanceMarker, GatherNodeMarker } from '../map/markers'
+import { DropChanceMarker, GatherNodeMarker, PortraitNodeMarker } from '../map/markers'
 import { createMapScene } from '../map/scene'
 import type { MapPoint, MapScene } from '../map/types'
 import { VERTERON_MAP_DEFINITION } from '../map/verteron'
@@ -23,9 +23,10 @@ import type {
   MobDropLine,
   MobLootFile,
   SharedLevelLootFile,
+  VerteronMob,
 } from './types'
 
-export type { ItemDef, DropSource, ItemDropFile, MobDropLine, MobLootFile } from './types'
+export type { ItemDef, DropSource, ItemDropFile, MobDropLine, MobLootFile, VerteronMob } from './types'
 export type { ItemFilterInput, ItemSortKey } from './types'
 export { ASSUMED_PLAYER_LEVEL, isOwnDrop } from './lootCompose'
 
@@ -587,6 +588,55 @@ export function getItemGatherMarkers(itemId: string): GatherNodeMarker[] {
       iconUrl,
     ),
   )
+}
+
+export function listVerteronMobs(): VerteronMob[] {
+  if (!dropIndex) return []
+  const out: VerteronMob[] = []
+  for (const [mobId, mob] of Object.entries(dropIndex.mobs)) {
+    const spawns = mob.spawns ?? []
+    out.push({
+      mobId,
+      nameEn: mob.nameEn || `NPC ${mobId}`,
+      nameRu: mob.nameRu ?? null,
+      level: mob.level ?? null,
+      icon: mob.icon ?? null,
+      iconUrl: mob.iconUrl ?? null,
+      title: mob.title ?? null,
+      gradeName: mob.gradeName ?? null,
+      creatureName: mob.creatureName ?? null,
+      race: mob.race ?? null,
+      spawnCount: spawns.length,
+      spawns,
+    })
+  }
+  out.sort((a, b) =>
+    (a.nameRu || a.nameEn).localeCompare(b.nameRu || b.nameEn, 'ru'),
+  )
+  return out
+}
+
+export function createMonsterSpawnScene(mob: VerteronMob): MapScene {
+  const name = mob.nameRu || mob.nameEn
+  const markers = (mob.spawns ?? []).map((pt, idx) =>
+    new PortraitNodeMarker(
+      `${mob.mobId}:${idx}`,
+      pt,
+      mob.mobId,
+      name,
+      mob.iconUrl,
+    ),
+  )
+  return createMapScene({
+    map: VERTERON_MAP_DEFINITION,
+    markers,
+    focusPoint: null,
+    emptyMessage: 'Нет точек спауна на карте Verteron.',
+    focusLabel: 'Все точки',
+    hintExtra: markers.length
+      ? `${markers.length} точек · клик по портрету — дроп`
+      : undefined,
+  })
 }
 
 export function createItemGatherMapScene(item: ItemDef): MapScene {

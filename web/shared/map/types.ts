@@ -21,7 +21,7 @@ export type MapDefinition = {
   attribution?: string
 }
 
-export type MarkerKind = 'pin' | 'percent' | 'cluster' | 'gather'
+export type MarkerKind = 'pin' | 'percent' | 'cluster' | 'gather' | 'portrait'
 
 export type MarkerRenderModel = {
   kind: MarkerKind

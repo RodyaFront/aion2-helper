@@ -172,7 +172,7 @@ const clusteredMarkers = computed((): IMapMarker[] => {
 
 /** Mob/gather count for ×N (cluster size); singles count as 1. */
 function markerMobCount(marker: IMapMarker): number {
-  if (marker.kind === 'cluster' || marker.kind === 'gather') {
+  if (marker.kind === 'cluster' || marker.kind === 'gather' || marker.kind === 'portrait') {
     return marker.renderModel(rateScale.value).count ?? 1
   }
   return 1
@@ -335,7 +335,7 @@ const markerModelsById = computed(() => {
 const countScale = computed(() => {
   const counts: number[] = []
   for (const m of visibleMarkers.value) {
-    if (m.kind !== 'cluster' && m.kind !== 'gather') continue
+    if (m.kind !== 'cluster' && m.kind !== 'gather' && m.kind !== 'portrait') continue
     const c = markerModelsById.value.get(m.id)?.count
     if (c != null && c >= 2) counts.push(c)
   }
@@ -414,7 +414,7 @@ function onMarkerEnter(marker: IMapMarker) {
   focusMarkerId.value = marker.id
   if (spiderOffsets.value.size > 0) return
   // Gather chips use native title + ×N; no mob stack popover.
-  if (marker.kind === 'gather') return
+  if (marker.kind === 'gather' || marker.kind === 'portrait') return
   openStackPopover(marker)
 }
 
@@ -528,7 +528,7 @@ function markerStyle(marker: IMapMarker) {
   if (marker.kind === 'cluster' && model.count != null && model.count >= 2) {
     countAccentValue = model.count
   }
-  else if (marker.kind !== 'gather' && layout?.isTop && layout.size >= 2) {
+  else if (marker.kind !== 'gather' && marker.kind !== 'portrait' && layout?.isTop && layout.size >= 2) {
     countAccentValue = layout.size
   }
 
@@ -746,7 +746,7 @@ watch(
             <span class="boss-map-marker-pin" aria-hidden="true" />
             <span class="boss-map-marker-label">{{ markerModel(marker).label }}</span>
           </template>
-          <template v-else-if="marker.kind === 'gather'">
+          <template v-else-if="marker.kind === 'gather' || marker.kind === 'portrait'">
             <span class="boss-map-marker-gather">
               <img
                 v-if="markerModel(marker).iconUrl"

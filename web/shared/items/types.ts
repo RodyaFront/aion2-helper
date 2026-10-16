@@ -78,6 +78,22 @@ export type MobDropLine = {
   max?: number | null
 }
 
+/** One Verteron mob from the drop index, with spawn points. */
+export type VerteronMob = {
+  mobId: string
+  nameEn: string
+  nameRu: string | null
+  level: number | null
+  icon: string | null
+  iconUrl: string | null
+  title: string | null
+  gradeName: string | null
+  creatureName: string | null
+  race: string | null
+  spawnCount: number
+  spawns: MapPoint[]
+}
+
 export type MobLootFile = {
   mobId: string
   scrapedAt: string

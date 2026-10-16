@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Package, Settings, Timer } from '@lucide/vue'
+import { Package, Settings, Swords, Timer } from '@lucide/vue'
 
 const route = useRoute()
 const showSettings = ref(false)
@@ -7,6 +7,7 @@ const showSettings = ref(false)
 const nav = [
   { to: '/', label: 'Боссы', hint: 'Таймеры полевых боссов', icon: Timer },
   { to: '/items', label: 'Предметы', hint: 'Дроп и карта', icon: Package },
+  { to: '/monsters', label: 'Монстры', hint: 'Спаун и дроп', icon: Swords },
 ] as const
 
 function isNavActive(to: string) {

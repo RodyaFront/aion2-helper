@@ -2515,14 +2515,16 @@ img {
 
 .boss-map-marker--percent,
 .boss-map-marker--cluster,
-.boss-map-marker--gather {
+.boss-map-marker--gather,
+.boss-map-marker--portrait {
   transform-origin: center center;
   pointer-events: auto;
   cursor: pointer;
 }
 
 /** Gather nodes: bare resource icon + soft shadow (no chip chrome). */
-.boss-map-marker--gather {
+.boss-map-marker--gather,
+.boss-map-marker--portrait {
   filter: none;
 }
 
@@ -2570,7 +2572,8 @@ img {
     0 0 0.2rem rgb(0 0 0 / 75%);
 }
 
-.boss-map-viewer.is-gesturing .boss-map-marker--gather .boss-map-marker-gather-icon {
+.boss-map-viewer.is-gesturing .boss-map-marker--gather .boss-map-marker-gather-icon,
+.boss-map-viewer.is-gesturing .boss-map-marker--portrait .boss-map-marker-gather-icon {
   filter: drop-shadow(0 0.04rem 0.08rem rgb(0 0 0 / 70%));
 }
 

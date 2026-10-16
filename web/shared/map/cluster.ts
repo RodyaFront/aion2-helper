@@ -1,4 +1,4 @@
-import { DropChanceMarker, DropClusterMarker, GatherClusterMarker, GatherNodeMarker } from './markers'
+import { DropChanceMarker, DropClusterMarker, GatherClusterMarker, GatherNodeMarker, PortraitClusterMarker, PortraitNodeMarker } from './markers'
 import { isBossExclusiveDrop } from './rateColor'
 import type { ClusterViewport, IClusterStrategy, IMapMarker } from './types'
 
@@ -162,6 +162,82 @@ function gatherBucketToMarkers(
       `gather:${layerId}:${cellX}:${cellY}`,
       { mapX: cx, mapY: cy },
       layerId,
+      count,
+      name,
+      iconUrl,
+    ),
+  ]
+}
+
+/** Clusters nearby portrait pins that share the same mob id. */
+export class SameMobPortraitCluster implements IClusterStrategy {
+  constructor(
+    public readonly screenRadiusPx = 36,
+  ) {}
+
+  cluster(markers: IMapMarker[], scale: number, _viewport: ClusterViewport): IMapMarker[] {
+    if (markers.length === 0) return []
+    const s = Math.max(scale, 0.0001)
+    const cellSize = Math.max(this.screenRadiusPx / s, 1e-3)
+
+    type Bucket = {
+      mobId: string
+      members: IMapMarker[]
+      cellX: number
+      cellY: number
+    }
+
+    const buckets = new Map<string, Bucket>()
+    const passthrough: IMapMarker[] = []
+
+    for (const m of markers) {
+      if (m.kind !== 'portrait' || !m.mobId || m.skipCluster) {
+        passthrough.push(m)
+        continue
+      }
+      const cellX = Math.floor(m.point.mapX / cellSize)
+      const cellY = Math.floor(m.point.mapY / cellSize)
+      const key = `${m.mobId}:${cellX}:${cellY}`
+      let bucket = buckets.get(key)
+      if (!bucket) {
+        bucket = { mobId: m.mobId, members: [], cellX, cellY }
+        buckets.set(key, bucket)
+      }
+      bucket.members.push(m)
+    }
+
+    const out: IMapMarker[] = [...passthrough]
+    for (const bucket of buckets.values()) {
+      out.push(...portraitBucketToMarkers(bucket.mobId, bucket.members, bucket.cellX, bucket.cellY))
+    }
+    return out
+  }
+}
+
+function portraitBucketToMarkers(
+  mobId: string,
+  members: IMapMarker[],
+  cellX: number,
+  cellY: number,
+): IMapMarker[] {
+  if (members.length === 1) return [members[0]!]
+
+  const seed = members.find((m) => m instanceof PortraitNodeMarker) as PortraitNodeMarker | undefined
+    ?? members.find((m) => m instanceof PortraitClusterMarker) as PortraitClusterMarker | undefined
+  const name = seed?.mobName ?? mobId
+  const iconUrl = seed?.iconUrl ?? null
+  const count = members.reduce((sum, m) => {
+    if (m instanceof PortraitClusterMarker) return sum + m.count
+    return sum + 1
+  }, 0)
+  const cx = members.reduce((sum, m) => sum + m.point.mapX, 0) / members.length
+  const cy = members.reduce((sum, m) => sum + m.point.mapY, 0) / members.length
+
+  return [
+    new PortraitClusterMarker(
+      `portrait:${mobId}:${cellX}:${cellY}`,
+      { mapX: cx, mapY: cy },
+      mobId,
       count,
       name,
       iconUrl,

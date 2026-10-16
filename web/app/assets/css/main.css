@@ -10,7 +10,9 @@ html,
 body,
 #__nuxt {
   margin: 0;
+  height: 100%;
   min-height: 100%;
+  overflow: hidden;
   color: var(--color-text);
   font-family: var(--font-sans);
   background: var(--color-bg);
@@ -68,15 +70,23 @@ img {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  min-height: 0;
   display: flex;
   flex-direction: row;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .app-sidebar {
   flex: 0 0 var(--sidebar-width);
   width: var(--sidebar-width);
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -87,6 +97,7 @@ img {
 }
 
 .sidebar-brand {
+  flex: 0 0 auto;
   padding: 0 var(--space-2);
   min-width: 0;
 }
@@ -116,6 +127,8 @@ img {
   gap: var(--space-1);
   flex: 1 1 auto;
   min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .sidebar-nav-link {
@@ -179,6 +192,7 @@ img {
 }
 
 .sidebar-foot {
+  flex: 0 0 auto;
   margin-top: auto;
   padding-top: var(--space-3);
   border-top: 1px solid var(--color-line-soft);
@@ -216,16 +230,25 @@ img {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .page-bosses,
 .page-items {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 1 0 auto;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.page-bosses > .app-body {
+  flex: 1 0 auto;
+  min-height: auto;
 }
 
 .stat {
@@ -3359,15 +3382,22 @@ img {
 /* —— Boot skeleton (instant shell while hydrate) —— */
 
 .boot-shell {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  min-height: 0;
   display: flex;
   flex-direction: row;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .boot-sidebar {
   flex: 0 0 14.5rem;
   width: 14.5rem;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -3402,6 +3432,8 @@ img {
 .boot-main {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
   padding: var(--space-4) var(--space-5) var(--space-6);
 }
 

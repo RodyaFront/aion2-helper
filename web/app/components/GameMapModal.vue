@@ -9,9 +9,12 @@ withDefaults(defineProps<{
   clusterStrategy?: IClusterStrategy | null
   minMobCount?: number
   maxMobCount?: number
+  /** When false, every marker in the viewport is drawn (no 200-chip cap). */
+  capDomMarkers?: boolean
 }>(), {
   minMobCount: 1,
   maxMobCount: Number.POSITIVE_INFINITY,
+  capDomMarkers: true,
 })
 
 const open = defineModel<boolean>('open', { required: true })
@@ -52,6 +55,7 @@ const hasSidebar = computed(() => Boolean(slots.sidebar))
           :cluster-strategy="clusterStrategy"
           :min-mob-count="minMobCount"
           :max-mob-count="maxMobCount"
+          :cap-dom-markers="capDomMarkers"
           @select-marker="emit('select-marker', $event)"
         />
       </div>

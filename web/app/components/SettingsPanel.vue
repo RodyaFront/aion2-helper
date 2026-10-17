@@ -31,6 +31,16 @@ const volume = computed({
   set: (value: number) => settings.setAlertVolume(value),
 })
 
+const bossSoundEnabled = computed({
+  get: () => settings.bossSoundEnabled,
+  set: (value: boolean) => settings.setBossSoundEnabled(value),
+})
+
+const riftSoundEnabled = computed({
+  get: () => settings.riftSoundEnabled,
+  set: (value: boolean) => settings.setRiftSoundEnabled(value),
+})
+
 const ttsEnabled = computed({
   get: () => settings.ttsEnabled,
   set: (value: boolean) => settings.setTtsEnabled(value),
@@ -79,7 +89,7 @@ function previewBossTier(tier: BossWarnTier) {
   ensureVoices()
   const meta = BOSS_TIER_META[tier]
   notifyNative(meta.title, meta.body)
-  void playBossWarn(tier)
+  if (settings.bossSoundEnabled) void playBossWarn(tier)
   speakAlert(bossWarnSpeech(DEMO_BOSS, meta.thresholdSec))
 }
 
@@ -87,7 +97,7 @@ function previewBossReady() {
   unlockAudio()
   ensureVoices()
   notifyNative('Тест: будильник', 'Звук респауна босса')
-  playAlarmBurst()
+  if (settings.bossSoundEnabled) playAlarmBurst()
   speakAlert(bossReadySpeech(DEMO_BOSS))
 }
 
@@ -145,6 +155,32 @@ function stopPreview() {
           :aria-valuenow="volume"
         >
       </div>
+
+      <label class="settings-switch" for="boss-sound-enabled">
+        <span class="settings-switch-copy">
+          <span class="settings-switch-title">Звуковые оповещения боссов</span>
+          <span class="settings-switch-desc">Предупреждения и будильник респауна</span>
+        </span>
+        <input
+          id="boss-sound-enabled"
+          v-model="bossSoundEnabled"
+          class="settings-switch-input"
+          type="checkbox"
+        >
+      </label>
+
+      <label class="settings-switch" for="rift-sound-enabled">
+        <span class="settings-switch-copy">
+          <span class="settings-switch-title">Звуковые оповещения разлома</span>
+          <span class="settings-switch-desc">Предупреждения и звук открытия портала</span>
+        </span>
+        <input
+          id="rift-sound-enabled"
+          v-model="riftSoundEnabled"
+          class="settings-switch-input"
+          type="checkbox"
+        >
+      </label>
 
       <label class="settings-switch" for="tts-enabled">
         <span class="settings-switch-copy">

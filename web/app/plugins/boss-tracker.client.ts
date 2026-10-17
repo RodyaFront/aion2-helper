@@ -34,7 +34,7 @@ export default defineNuxtPlugin(() => {
         if (lastBossToastIds.has(toast.id)) continue
         notifyNative(toast.title, toast.body)
         if (toast.speech) speakAlert(toast.speech)
-        if (toast.kind === 'warn') {
+        if (toast.kind === 'warn' && settings.bossSoundEnabled) {
           void playBossWarn(toast.warnTier ?? 'ping')
         }
       }
@@ -45,9 +45,16 @@ export default defineNuxtPlugin(() => {
   watch(
     () => store.isAlarming,
     (alarming) => {
-      if (alarming) startAlarmLoop()
-      else stopAlarmLoop()
       window.aionTracker?.setAlarming?.(alarming)
+    },
+    { immediate: true },
+  )
+
+  watch(
+    () => store.isAlarming && settings.bossSoundEnabled,
+    (play) => {
+      if (play) startAlarmLoop()
+      else stopAlarmLoop()
     },
     { immediate: true },
   )
@@ -63,8 +70,10 @@ export default defineNuxtPlugin(() => {
       lastRiftToastKey = key
       notifyNative(rift.toast.title, rift.toast.body)
       if (rift.toast.speech) speakAlert(rift.toast.speech)
-      if (rift.toast.kind === 'warn') playRiftWarn()
-      else playRiftAlert()
+      if (settings.riftSoundEnabled) {
+        if (rift.toast.kind === 'warn') playRiftWarn()
+        else playRiftAlert()
+      }
     },
   )
 

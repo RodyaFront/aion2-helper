@@ -55,7 +55,7 @@ const gradeOptions = [
 const sortOptions = [
   { value: 'name', label: 'Имя' },
   { value: 'level', label: 'Уровень' },
-  { value: 'spawns', label: 'Сначала с точками' },
+  { value: 'spawns', label: 'Сначала с координатами' },
 ]
 
 function raceLabel(value: string | null | undefined): string {
@@ -76,9 +76,9 @@ function levelBand(lvl: number | null): string {
 function pointsLabel(n: number): string {
   const mod10 = n % 10
   const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'точка'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'точки'
-  return 'точек'
+  if (mod10 === 1 && mod100 !== 11) return 'координата'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'координаты'
+  return 'координат'
 }
 
 function readQuery() {
@@ -298,15 +298,15 @@ onBeforeUnmount(() => {
               <label
                 class="items-opt"
                 :title="spawnCount
-                  ? 'Монстры с точками спауна на карте Verteron'
-                  : 'Пока нет монстров с точками на карте'"
+                  ? 'Монстры с координатами спауна на карте Verteron'
+                  : 'Пока нет монстров с координатами на карте'"
               >
                 <input
                   v-model="onlyWithSpawns"
                   type="checkbox"
                   :disabled="spawnCount === 0"
                 >
-                С точками
+                С координатами
                 <span class="items-opt-count">{{ spawnCount }}</span>
               </label>
               <button
@@ -409,7 +409,7 @@ onBeforeUnmount(() => {
               <span class="items-col-name">Монстр</span>
               <span class="items-col-meta">Существо</span>
               <span class="items-col-lvl">Ур.</span>
-              <span class="items-col-id">Точки</span>
+              <span class="items-col-id">Координаты</span>
               <span class="items-col-actions" />
             </div>
             <AppVirtualList

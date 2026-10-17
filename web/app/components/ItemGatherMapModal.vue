@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { SameGatherLayerCluster } from '../../shared/map/cluster'
 import {
   createItemGatherMapScene,
   getGatherLayerForItem,
@@ -14,8 +13,6 @@ const props = defineProps<{
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
-
-const cluster = new SameGatherLayerCluster(36)
 
 const layer = computed(() =>
   getGatherLayerForItem(props.item.itemId)
@@ -46,13 +43,13 @@ const layerTitle = computed(() =>
     :title="item.nameRu || item.nameEn"
     :description="`Verteron · сбор ${layerTitle}`"
     :scene="scene"
-    :cluster-strategy="cluster"
+    :cap-dom-markers="false"
   >
     <template #sidebar>
       <div class="map-data-sidebar">
         <article class="map-research-card" aria-label="Исследуемый ресурс">
           <p class="map-research-eyebrow">
-            Точки сбора
+            Координаты сбора
           </p>
           <div class="map-research-body">
             <div class="map-research-media">
@@ -72,7 +69,7 @@ const layerTitle = computed(() =>
               </p>
               <p class="map-research-meta">
                 Слой {{ layerTitle }}
-                · {{ totalMarkers }} точек
+                · {{ totalMarkers }} координат
               </p>
             </div>
           </div>
@@ -84,11 +81,11 @@ const layerTitle = computed(() =>
           </h3>
           <p class="map-data-stat">
             <strong>{{ visibleCount }}</strong>
-            <span>из {{ totalMarkers }} точек</span>
+            <span>из {{ totalMarkers }} координат</span>
           </p>
           <p class="map-data-hint">
             Все грейды этого ресурса собираются с одних и тех же узлов.
-            Маркеры — иконки ресурса без рамки (кластер ×N при зуме).
+            Каждая координата — отдельная иконка, без группировки.
           </p>
         </section>
       </div>

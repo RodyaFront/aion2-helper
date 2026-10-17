@@ -19,6 +19,12 @@ export const RACE_LABEL_RU: Record<PlayerRace, string> = {
   asmodian: 'Асмодиане',
 }
 
+/** Official faction badges (≤128×128 WebP under public/races/). */
+export const RACE_ICON: Record<PlayerRace, string> = {
+  elyos: '/races/elyos.webp',
+  asmodian: '/races/asmodian.webp',
+}
+
 export const REGION_LABEL_RU: Record<RegionId, string> = {
   verteron: 'Вертерон',
   altgard: 'Альтгард',
@@ -34,4 +40,10 @@ export function normalizeRace(raw: unknown): PlayerRace {
 
 export function isRegionId(raw: unknown): raw is RegionId {
   return raw === 'verteron' || raw === 'altgard'
+}
+
+/** Sets CSS race theme tokens via `html[data-race]`. */
+export function applyRaceDocumentTheme(race: PlayerRace) {
+  if (typeof document === 'undefined') return
+  document.documentElement.dataset.race = normalizeRace(race)
 }

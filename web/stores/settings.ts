@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { loadPersisted, savePersisted } from '../shared/persist'
 import {
+  applyRaceDocumentTheme,
   normalizeRace,
   regionForRace,
   type PlayerRace,
@@ -63,6 +64,7 @@ export const useSettingsStore = defineStore('settings', {
       if (typeof parsed?.ttsEnabled === 'boolean') {
         this.ttsEnabled = parsed.ttsEnabled
       }
+      applyRaceDocumentTheme(this.race)
       this.hydrated = true
     },
 
@@ -79,6 +81,7 @@ export const useSettingsStore = defineStore('settings', {
 
     setRace(value: PlayerRace) {
       this.race = normalizeRace(value)
+      applyRaceDocumentTheme(this.race)
       this.persist()
     },
 

@@ -31,7 +31,8 @@
     "sounds:generate": "python scripts/generate-alert-sounds.py",
     "sounds:validate": "python scripts/validate-alert-sounds.py",
     "sounds": "npm run sounds:generate && npm run sounds:validate",
-    "icons:generate": "python scripts/generate-app-icon.py"
+    "icons:generate": "python scripts/generate-app-icon.py",
+    "races:icons": "node scripts/fetch-race-icons.mjs"
   },
   "devDependencies": {
     "@lucide/vue": "^1.55.0",

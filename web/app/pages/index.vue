@@ -56,7 +56,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="page-bosses">
-    <div class="app-body">
+    <div class="app-body is-single">
       <div class="app-primary">
         <div class="tracker-bar">
           <div class="boss-stats" aria-label="Сводка таймеров">
@@ -117,8 +117,6 @@ onBeforeUnmount(() => {
           </div>
         </main>
       </div>
-
-      <RiftSidebar />
     </div>
 
     <AddBossModal v-model:open="showAdd" />

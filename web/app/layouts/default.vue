@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Package, Settings, Swords, Timer } from '@lucide/vue'
 import {
+  applyRaceDocumentTheme,
+  RACE_ICON,
   RACE_LABEL_RU,
   REGION_LABEL_RU,
   type PlayerRace,
@@ -17,9 +19,9 @@ const nav = [
   { to: '/monsters', label: 'Монстры', hint: 'Спаун и дроп', icon: Swords },
 ] as const
 
-const raceOptions: Array<{ id: PlayerRace, label: string }> = [
-  { id: 'elyos', label: 'Элийцы' },
-  { id: 'asmodian', label: 'Асмодиане' },
+const raceOptions: Array<{ id: PlayerRace, label: string, icon: string }> = [
+  { id: 'elyos', label: 'Элийцы', icon: RACE_ICON.elyos },
+  { id: 'asmodian', label: 'Асмодиане', icon: RACE_ICON.asmodian },
 ]
 
 const brandSub = computed(() => {
@@ -36,10 +38,16 @@ function isNavActive(to: string) {
 function setRace(race: PlayerRace) {
   settings.setRace(race)
 }
+
+watch(
+  () => settings.race,
+  (race) => applyRaceDocumentTheme(race),
+  { immediate: true },
+)
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :data-race="settings.race">
     <aside class="app-sidebar" aria-label="Инструменты">
       <div class="sidebar-brand">
         <p class="sidebar-brand-mark">
@@ -60,9 +68,20 @@ function setRace(race: PlayerRace) {
             class="sidebar-race-btn"
             :class="{ 'is-active': settings.race === opt.id }"
             :aria-pressed="settings.race === opt.id"
+            :aria-label="opt.label"
+            :title="opt.label"
             @click="setRace(opt.id)"
           >
-            {{ opt.label }}
+            <img
+              class="sidebar-race-icon"
+              :src="opt.icon"
+              :alt="opt.label"
+              width="128"
+              height="128"
+              decoding="async"
+              draggable="false"
+            >
+            <span class="sidebar-race-label">{{ opt.label }}</span>
           </button>
         </div>
       </div>
@@ -82,6 +101,10 @@ function setRace(race: PlayerRace) {
           </span>
         </NuxtLink>
       </nav>
+
+      <div class="sidebar-rift">
+        <RiftSidebar />
+      </div>
 
       <div class="sidebar-foot">
         <button

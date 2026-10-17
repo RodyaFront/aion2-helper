@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { createBossMapScene } from '../../shared/map/scene'
-import { getVerteronBossCoord, VERTERON_MAP_DEFINITION } from '../../shared/map/verteron'
+import {
+  bossCoordToPoint,
+  getBossCoord,
+  mapDefinitionForRegion,
+  regionLabelEn,
+} from '../../shared/map/regions'
+import { useSettingsStore } from '../../stores/settings'
 import GameMapModal from './GameMapModal.vue'
 
 const props = defineProps<{
@@ -9,25 +15,27 @@ const props = defineProps<{
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
+const settings = useSettingsStore()
 
 const scene = computed(() => {
-  const coord = getVerteronBossCoord(props.bossId)
+  const regionId = settings.regionId
+  const coord = getBossCoord(regionId, props.bossId)
   return createBossMapScene({
-    map: VERTERON_MAP_DEFINITION,
+    map: mapDefinitionForRegion(regionId),
     bossId: props.bossId,
     bossName: props.bossName || coord?.name || props.bossId,
-    point: coord
-      ? { mapX: coord.mapX, mapY: coord.mapY, x: coord.x, y: coord.y }
-      : null,
+    point: bossCoordToPoint(coord),
   })
 })
+
+const description = computed(() => `${regionLabelEn(settings.regionId)} · место на карте`)
 </script>
 
 <template>
   <GameMapModal
     v-model:open="open"
     :title="bossName"
-    description="Verteron · место на карте"
+    :description="description"
     :scene="scene"
   />
 </template>

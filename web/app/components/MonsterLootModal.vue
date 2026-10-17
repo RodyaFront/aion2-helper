@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ExternalLink, MapPin, Package } from '@lucide/vue'
 import { ASSUMED_PLAYER_LEVEL, getMobLootForPlayer } from '../../shared/items/catalog'
-import type { VerteronMob } from '../../shared/items/types'
+import type { RegionMob } from '../../shared/items/types'
+import { useSettingsStore } from '../../stores/settings'
 import LootTable from './LootTable.vue'
 
 const props = withDefaults(defineProps<{
-  mob: VerteronMob
+  mob: RegionMob
   /** When opened from a zoom-cluster chip. */
   clusterCount?: number | null
   useSharedScaling?: boolean
@@ -15,6 +16,7 @@ const props = withDefaults(defineProps<{
 })
 
 const open = defineModel<boolean>('open', { required: true })
+const settings = useSettingsStore()
 
 const portraitBroken = ref(false)
 watch(
@@ -36,6 +38,7 @@ const lootView = computed(() =>
   getMobLootForPlayer(props.mob.mobId, {
     baseLevel: props.mob.level,
     useSharedScaling: props.useSharedScaling,
+    regionId: settings.regionId,
   }),
 )
 

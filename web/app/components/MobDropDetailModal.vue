@@ -4,6 +4,7 @@ import { ASSUMED_PLAYER_LEVEL, getMobLootForPlayer } from '../../shared/items/ca
 import type { DropSource, ItemDef, MobDropLine } from '../../shared/items/types'
 import { gradeClass } from '../../shared/items/grade'
 import { formatRate, rateTooltip } from '../../shared/map/markers'
+import { useSettingsStore } from '../../stores/settings'
 import ItemIcon from './ItemIcon.vue'
 import LootTable from './LootTable.vue'
 
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<{
 })
 
 const open = defineModel<boolean>('open', { required: true })
+const settings = useSettingsStore()
 
 const portraitBroken = ref(false)
 watch(
@@ -41,6 +43,7 @@ const lootView = computed(() =>
   getMobLootForPlayer(props.source.mobId, {
     baseLevel: props.source.level,
     useSharedScaling: props.useSharedScaling,
+    regionId: settings.regionId,
   }),
 )
 

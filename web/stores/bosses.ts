@@ -7,9 +7,11 @@ import {
   type AlertThreshold,
   type BossWarnTier,
   warnTierForThreshold,
-  VERTERON_BOSSES,
+  bossesForRegion,
+  type BossRegionId,
   slugify,
 } from '../shared/bosses'
+import { isRegionId } from '../shared/race'
 import { loadPersisted, savePersisted } from '../shared/persist'
 import { bossAlertSpeech, type SpeechPayload } from '../shared/speakLines'
 
@@ -43,10 +45,13 @@ export interface TrackerToast {
   speech?: SpeechPayload
 }
 
-const SEED_BY_ID = new Map(VERTERON_BOSSES.map((b) => [b.id, b]))
+type RegionsPayload = {
+  bosses?: BossState[]
+  regions?: Partial<Record<BossRegionId, BossState[]>>
+}
 
-function seedBosses(): BossState[] {
-  return VERTERON_BOSSES.map((b) => ({
+function seedBosses(regionId: BossRegionId): BossState[] {
+  return bossesForRegion(regionId).map((b) => ({
     id: b.id,
     name: b.name,
     nameRu: b.nameRu,
@@ -61,7 +66,24 @@ function seedBosses(): BossState[] {
   }))
 }
 
-/** Mark skipped warn thresholds without toast (e.g. late join). Never marks ready. */
+function seedById(regionId: BossRegionId) {
+  return new Map(bossesForRegion(regionId).map((b) => [b.id, b]))
+}
+
+function mergeWithSeed(list: BossState[], regionId: BossRegionId): BossState[] {
+  const seed = seedById(regionId)
+  return list.map((b) => {
+    const def = seed.get(b.id)
+    return {
+      ...b,
+      nameRu: def?.nameRu ?? b.nameRu ?? '',
+      locationRu: def?.locationRu ?? b.locationRu ?? '',
+      favorite: Boolean(b.favorite),
+      firedAlerts: normalizeFiredAlerts(b.firedAlerts),
+    }
+  })
+}
+
 function syncMissedAlerts(boss: BossState, now = Date.now()): BossState {
   if (boss.respawnAt == null) return boss
   const remainingSec = (boss.respawnAt - now) / 1000
@@ -91,8 +113,35 @@ function syncAlarmBridge(alarmingIds: string[]) {
   window.aionTracker?.setAlarming?.(alarmingIds.length > 0)
 }
 
+function emptyRegions(): Record<BossRegionId, BossState[]> {
+  return {
+    verteron: seedBosses('verteron'),
+    altgard: seedBosses('altgard'),
+  }
+}
+
+function parsePersistedRegions(parsed: RegionsPayload | null): Record<BossRegionId, BossState[]> {
+  const next = emptyRegions()
+  if (parsed?.regions) {
+    for (const key of ['verteron', 'altgard'] as BossRegionId[]) {
+      const list = parsed.regions[key]
+      if (Array.isArray(list) && list.length) {
+        next[key] = mergeWithSeed(list, key)
+      }
+    }
+    return next
+  }
+  // Legacy: single bosses array = Verteron
+  if (Array.isArray(parsed?.bosses) && parsed.bosses.length) {
+    next.verteron = mergeWithSeed(parsed.bosses, 'verteron')
+  }
+  return next
+}
+
 export const useBossStore = defineStore('bosses', {
   state: () => ({
+    regionId: 'verteron' as BossRegionId,
+    regions: emptyRegions() as Record<BossRegionId, BossState[]>,
     bosses: [] as BossState[],
     now: Date.now(),
     query: '',
@@ -155,38 +204,52 @@ export const useBossStore = defineStore('bosses', {
   actions: {
     async hydrate() {
       if (!import.meta.client || this.hydrated) return
-      const parsed = await loadPersisted<{ bosses?: BossState[] }>('bosses')
-      if (Array.isArray(parsed?.bosses) && parsed.bosses.length) {
-        this.bosses = parsed.bosses.map((b) => {
-          const seed = SEED_BY_ID.get(b.id)
-          return {
-            ...b,
-            nameRu: seed?.nameRu ?? b.nameRu ?? '',
-            locationRu: seed?.locationRu ?? b.locationRu ?? '',
-            favorite: Boolean(b.favorite),
-            firedAlerts: normalizeFiredAlerts(b.firedAlerts),
-          }
-        })
-      }
-      else {
-        this.bosses = seedBosses()
-      }
+      const parsed = await loadPersisted<RegionsPayload>('bosses')
+      this.regions = parsePersistedRegions(parsed)
 
       const now = Date.now()
-      let changed = false
-      this.bosses = this.bosses.map((boss) => {
-        const next = syncMissedAlerts(boss, now)
-        if (next !== boss) changed = true
-        return next
-      })
+      for (const key of ['verteron', 'altgard'] as BossRegionId[]) {
+        this.regions[key] = this.regions[key].map((boss) => syncMissedAlerts(boss, now))
+      }
       this.now = now
+      this.applyRegion(this.regionId, { persist: false, clearAlerts: false })
       this.hydrated = true
       void this.persist()
     },
 
     persist() {
       if (!import.meta.client || !this.hydrated) return
-      void savePersisted('bosses', { bosses: this.bosses })
+      this.regions[this.regionId] = this.bosses
+      void savePersisted('bosses', {
+        regions: {
+          verteron: this.regions.verteron,
+          altgard: this.regions.altgard,
+        },
+      })
+    },
+
+    /** Switch active field region (from race setting). Timers for other region stay frozen. */
+    setRegion(regionId: BossRegionId) {
+      if (!isRegionId(regionId) || regionId === this.regionId) return
+      this.applyRegion(regionId, { persist: true, clearAlerts: true })
+    },
+
+    applyRegion(
+      regionId: BossRegionId,
+      opts: { persist: boolean, clearAlerts: boolean },
+    ) {
+      if (this.hydrated) {
+        this.regions[this.regionId] = this.bosses
+      }
+      this.regionId = regionId
+      this.bosses = this.regions[regionId] ?? seedBosses(regionId)
+      if (opts.clearAlerts) {
+        this.toasts = []
+        this.alarmingIds = []
+        syncAlarmBridge([])
+      }
+      this.now = Date.now()
+      if (opts.persist) this.persist()
     },
 
     tick() {

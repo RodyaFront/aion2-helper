@@ -5,8 +5,8 @@ export interface AionTrackerBridge {
   speak?: (payload: { text: string, lang: string, volume: number }) => Promise<boolean>
   stopSpeak?: () => void
   onFocusApp: (handler: () => void) => () => void
-  loadState: (key: 'bosses' | 'settings') => Promise<unknown>
-  saveState: (key: 'bosses' | 'settings', data: unknown) => Promise<void>
+  loadState: (key: 'bosses' | 'settings' | 'favorites') => Promise<unknown>
+  saveState: (key: 'bosses' | 'settings' | 'favorites', data: unknown) => Promise<void>
 }
 
 declare global {

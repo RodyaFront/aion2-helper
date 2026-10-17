@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExternalLink, MapPin, RotateCcw } from '@lucide/vue'
+import { Bookmark, ExternalLink, MapPin, RotateCcw } from '@lucide/vue'
 import {
   buildCategoryOptions,
   catalogError,
@@ -23,15 +23,21 @@ import ItemIcon from '../../components/ItemIcon.vue'
 import AppFilterSelect from '../../components/ui/AppFilterSelect.vue'
 import AppSearchInput from '../../components/ui/AppSearchInput.vue'
 import AppVirtualList from '../../components/ui/AppVirtualList.vue'
+import { useFavoritesStore } from '../../../stores/favorites'
+import { useSettingsStore } from '../../../stores/settings'
 
 const route = useRoute()
 const router = useRouter()
+const favorites = useFavoritesStore()
+const settings = useSettingsStore()
+const regionId = computed(() => settings.regionId)
 
 const query = ref('')
 const category = ref('all')
 const itemType = ref('all')
 const grade = ref('all')
 const onlyWithDropPoints = ref(false)
+const onlyFavorites = ref(false)
 const hideCosmetics = ref(true)
 const sort = ref('name')
 const mapItem = ref<ItemDef | null>(null)
@@ -85,6 +91,7 @@ function readQuery() {
   itemType.value = typeof q.type === 'string' ? q.type : 'all'
   grade.value = typeof q.grade === 'string' ? q.grade : 'all'
   onlyWithDropPoints.value = readDropPointsQuery(q)
+  onlyFavorites.value = q.fav === '1'
   hideCosmetics.value = q.cos !== '0'
   // Legacy URL: sort=name-ru → single locale-aware "name"
   const rawSort = typeof q.sort === 'string' ? q.sort : 'name'
@@ -103,6 +110,7 @@ function writeQuery() {
   if (itemType.value !== 'all') next.type = itemType.value
   if (grade.value !== 'all') next.grade = grade.value
   if (onlyWithDropPoints.value) next.points = '1'
+  if (onlyFavorites.value) next.fav = '1'
   if (!hideCosmetics.value) next.cos = '0'
   if (sort.value !== 'name') next.sort = sort.value
   const cur = route.query
@@ -112,6 +120,7 @@ function writeQuery() {
       && String(cur.type || '') === String(next.type || '')
       && String(cur.grade || '') === String(next.grade || '')
       && String(cur.points || '') === String(next.points || '')
+      && String(cur.fav || '') === String(next.fav || '')
       && String(cur.cos || '') === String(next.cos || '')
       && String(cur.sort || '') === String(next.sort || '')
       // Ignore legacy map= while rewriting to points=
@@ -128,9 +137,15 @@ const filterInput = computed<ItemFilterInput>(() => ({
   onlyWithDropPoints: onlyWithDropPoints.value,
   hideCosmetics: hideCosmetics.value,
   sort: sort.value as ItemSortKey,
+  regionId: regionId.value,
 }))
 
-const filtered = computed(() => filterItems(filterInput.value, catalogItems.value))
+const filtered = computed(() => {
+  const list = filterItems(filterInput.value, catalogItems.value)
+  if (!onlyFavorites.value) return list
+  const ids = favorites.itemIdSet
+  return list.filter((item) => ids.has(item.itemId))
+})
 
 const categoryOptions = computed(() => [
   { value: 'all', label: 'Все категории' },
@@ -140,7 +155,20 @@ const categoryOptions = computed(() => [
 const totalCount = computed(() => catalogMeta.value?.count ?? catalogItems.value.length)
 
 const dropPointsCount = computed(
-  () => catalogItems.value.filter((item) => itemHasMap(item)).length,
+  () => catalogItems.value.filter((item) => itemHasMap(item, regionId.value)).length,
+)
+
+function itemHasRegionMap(item: ItemDef) {
+  return itemHasMap(item, regionId.value)
+}
+
+function itemPrefersDropMap(item: ItemDef) {
+  if (regionId.value === 'altgard') return Boolean(item.hasAltgardMap)
+  return Boolean(item.hasVerteronMap)
+}
+
+const favoriteCount = computed(
+  () => catalogItems.value.filter((item) => favorites.itemIdSet.has(item.itemId)).length,
 )
 
 const hasActiveFilters = computed(() =>
@@ -150,6 +178,7 @@ const hasActiveFilters = computed(() =>
     || itemType.value !== 'all'
     || grade.value !== 'all'
     || onlyWithDropPoints.value
+    || onlyFavorites.value
     || !hideCosmetics.value
     || sort.value !== 'name',
   ),
@@ -167,14 +196,14 @@ const scrapedLabel = computed(() => {
 })
 
 async function openMap(item: ItemDef) {
-  if (!itemHasMap(item)) return
+  if (!itemHasRegionMap(item)) return
   // Prefer drop map when both flags set (rare); gather otherwise.
-  if (item.hasVerteronMap) {
-    await ensureItemDropIndex()
+  if (itemPrefersDropMap(item)) {
+    await ensureItemDropIndex(regionId.value)
     mapMode.value = 'drop'
   }
   else {
-    await ensureItemGatherIndex()
+    await ensureItemGatherIndex(regionId.value)
     mapMode.value = 'gather'
   }
   mapItem.value = item
@@ -182,7 +211,7 @@ async function openMap(item: ItemDef) {
 }
 
 function onRowActivate(item: ItemDef) {
-  if (itemHasMap(item)) openMap(item)
+  if (itemHasRegionMap(item)) openMap(item)
   else if (item.sourceUrl) window.open(item.sourceUrl, '_blank', 'noopener,noreferrer')
 }
 
@@ -192,6 +221,7 @@ function resetFilters() {
   itemType.value = 'all'
   grade.value = 'all'
   onlyWithDropPoints.value = false
+  onlyFavorites.value = false
   hideCosmetics.value = true
   sort.value = 'name'
   activeIndex.value = -1
@@ -226,7 +256,7 @@ function onListKeydown(e: KeyboardEvent) {
     const item = activeIndex.value >= 0
       ? filtered.value[activeIndex.value]
       : null
-    if (item && itemHasMap(item)) {
+    if (item && itemHasRegionMap(item)) {
       e.preventDefault()
       openMap(item)
     }
@@ -239,7 +269,7 @@ watch(
 )
 
 watch(
-  [query, category, itemType, grade, onlyWithDropPoints, hideCosmetics, sort],
+  [query, category, itemType, grade, onlyWithDropPoints, onlyFavorites, hideCosmetics, sort],
   () => {
     writeQuery()
     activeIndex.value = -1
@@ -250,11 +280,24 @@ watch(filtered, () => {
   if (activeIndex.value >= filtered.value.length) activeIndex.value = filtered.value.length - 1
 })
 
+async function loadRegionIndexes() {
+  await Promise.all([
+    ensureItemDropIndex(regionId.value),
+    ensureItemGatherIndex(regionId.value),
+  ])
+}
+
+watch(regionId, () => {
+  void loadRegionIndexes()
+  showMap.value = false
+  mapItem.value = null
+})
+
 onMounted(async () => {
   readQuery()
   window.addEventListener('keydown', onSlashFocus)
   try {
-    await ensureItemCatalog()
+    await ensureItemCatalog(regionId.value)
   }
   catch {
     /* catalogError set in module */
@@ -302,6 +345,17 @@ onBeforeUnmount(() => {
                 >
                 С координатами
                 <span class="items-opt-count">{{ dropPointsCount }}</span>
+              </label>
+              <label
+                class="items-opt"
+                title="Показать только избранные"
+              >
+                <input
+                  v-model="onlyFavorites"
+                  type="checkbox"
+                >
+                Избранные
+                <span class="items-opt-count">{{ favoriteCount }}</span>
               </label>
               <button
                 v-if="hasActiveFilters"
@@ -417,7 +471,7 @@ onBeforeUnmount(() => {
                   class="item-row"
                   :class="{
                     'is-active': index === activeIndex,
-                    'has-map': itemHasMap(item),
+                    'has-map': itemHasRegionMap(item),
                   }"
                   @click="activeIndex = index"
                   @dblclick="onRowActivate(item)"
@@ -455,10 +509,25 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="items-col-actions">
                     <button
-                      v-if="itemHasMap(item)"
+                      type="button"
+                      class="fav-btn"
+                      :class="{ 'is-on': favorites.itemIdSet.has(item.itemId) }"
+                      :aria-pressed="favorites.itemIdSet.has(item.itemId)"
+                      :aria-label="favorites.itemIdSet.has(item.itemId) ? 'Убрать из избранного' : 'В избранное'"
+                      :title="favorites.itemIdSet.has(item.itemId) ? 'Убрать из избранного' : 'В избранное'"
+                      @click.stop="favorites.toggleItem(item.itemId)"
+                    >
+                      <Bookmark
+                        class="ui-icon"
+                        aria-hidden="true"
+                        :fill="favorites.itemIdSet.has(item.itemId) ? 'currentColor' : 'none'"
+                      />
+                    </button>
+                    <button
+                      v-if="itemHasRegionMap(item)"
                       type="button"
                       class="btn btn-sm"
-                      :title="item.hasVerteronMap ? 'Карта дропа' : 'Карта сбора'"
+                      :title="itemPrefersDropMap(item) ? 'Карта дропа' : 'Карта сбора'"
                       @click.stop="openMap(item)"
                     >
                       <MapPin
@@ -491,7 +560,12 @@ onBeforeUnmount(() => {
             v-else
             class="empty-state"
           >
-            Ничего не найдено.
+            <template v-if="onlyFavorites && favoriteCount === 0">
+              Нет избранных. Нажми закладку в строке.
+            </template>
+            <template v-else>
+              Ничего не найдено.
+            </template>
             <button
               v-if="hasActiveFilters"
               type="button"

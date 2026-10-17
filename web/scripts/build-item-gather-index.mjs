@@ -1,24 +1,41 @@
 /**
- * Index Verteron Resources layers → itemId → shared gather spawns.
+ * Index region Resources layers → itemId → shared gather spawns.
  *
  * All grades listed on a layer share the same coordinates (common node truth).
  * Non-GATHERRESOURCE junk in layer.items (e.g. reward boxes) is skipped.
  *
  * Output:
- *   public/data/item-gather-index.json
- * Also patches hasGatherMap / gatherSpawnCount on public/data/items-catalog.json
+ *   public/data/item-gather-index.json              (verteron, default)
+ *   public/data/item-gather-index-altgard.json      (--region=altgard)
+ * Also patches catalog flags for the target region.
  *
- * Usage: node scripts/build-item-gather-index.mjs
+ * Usage:
+ *   node scripts/build-item-gather-index.mjs
+ *   node scripts/build-item-gather-index.mjs --region=altgard
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const outPath = path.join(root, 'public', 'data', 'item-gather-index.json')
 const catalogPath = path.join(root, 'public', 'data', 'items-catalog.json')
-const mapUrl = 'https://dbaion2.ru/data-en/maps/verteron.json'
-const mapRuUrl = 'https://dbaion2.ru/data/maps/verteron.json'
+
+const regionArg = process.argv.find((a) => a.startsWith('--region='))
+const region = (regionArg?.split('=')[1] || 'verteron').toLowerCase()
+if (region !== 'verteron' && region !== 'altgard') {
+  console.error('Unsupported region:', region)
+  process.exit(1)
+}
+
+const outPath = region === 'altgard'
+  ? path.join(root, 'public', 'data', 'item-gather-index-altgard.json')
+  : path.join(root, 'public', 'data', 'item-gather-index.json')
+
+const mapUrl = `https://dbaion2.ru/data-en/maps/${region}.json`
+const mapRuUrl = `https://dbaion2.ru/data/maps/${region}.json`
+
+const flagHas = region === 'altgard' ? 'hasAltgardGatherMap' : 'hasGatherMap'
+const flagCount = region === 'altgard' ? 'altgardGatherSpawnCount' : 'gatherSpawnCount'
 
 function toTilePoint(x, y) {
   return {
@@ -54,11 +71,11 @@ function isGatherResource(itemId) {
   return row?.category === 'GATHERRESOURCE'
 }
 
-console.log('fetch Verteron map (EN)…')
+console.log(`fetch ${region} map (EN)…`)
 const mapEn = await fetchJson(mapUrl)
 let mapRu = null
 try {
-  console.log('fetch Verteron map (RU)…')
+  console.log(`fetch ${region} map (RU)…`)
   mapRu = await fetchJson(mapRuUrl)
 }
 catch (err) {
@@ -118,7 +135,8 @@ for (const layer of mapEn.layers || []) {
 
 const payload = {
   scrapedAt: new Date().toISOString(),
-  source: 'dbaion2.ru Verteron Resources layers',
+  regionId: region,
+  source: `dbaion2.ru ${region} Resources layers`,
   attribution: 'Gather spawn data from dbaion2.ru (fan client dump). AION 2 © NCSOFT.',
   layerCount: Object.keys(layers).length,
   itemCount: Object.keys(items).length,
@@ -139,25 +157,24 @@ for (const item of catalog.items || []) {
   const layerId = items[itemId]
   const spawnCount = layerId ? (layers[layerId]?.spawns?.length || 0) : 0
   const nextHas = spawnCount > 0
-  if (item.hasGatherMap !== nextHas || item.gatherSpawnCount !== spawnCount) {
-    item.hasGatherMap = nextHas
-    item.gatherSpawnCount = spawnCount
+  if (item[flagHas] !== nextHas || item[flagCount] !== spawnCount) {
+    item[flagHas] = nextHas
+    item[flagCount] = spawnCount
     patched++
   }
-  else if (item.hasGatherMap == null || item.gatherSpawnCount == null) {
-    item.hasGatherMap = nextHas
-    item.gatherSpawnCount = spawnCount
+  else if (item[flagHas] == null || item[flagCount] == null) {
+    item[flagHas] = nextHas
+    item[flagCount] = spawnCount
     patched++
   }
 }
 
-// Ensure non-gather rows have explicit false/0 after first patch run.
 for (const item of catalog.items || []) {
-  if (item.hasGatherMap == null) item.hasGatherMap = false
-  if (item.gatherSpawnCount == null) item.gatherSpawnCount = 0
+  if (item[flagHas] == null) item[flagHas] = false
+  if (item[flagCount] == null) item[flagCount] = 0
 }
 
 fs.writeFileSync(catalogPath, `${JSON.stringify(catalog)}\n`)
 console.log(
-  `catalog patched rows: ${patched}, with gather map: ${(catalog.items || []).filter((i) => i.hasGatherMap).length}`,
+  `catalog patched rows: ${patched}, with ${region} gather map: ${(catalog.items || []).filter((i) => i[flagHas]).length}`,
 )

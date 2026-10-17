@@ -1,13 +1,13 @@
-type PersistKey = 'bosses' | 'settings'
+type PersistKey = 'bosses' | 'settings' | 'favorites'
 
 type BossesPayload = {
   bosses?: Array<{ respawnAt?: number | null }>
 }
 
 function localKey(key: PersistKey): string {
-  return key === 'bosses'
-    ? 'aion-boss-tracker-state-v1'
-    : 'aion-boss-tracker-settings-v1'
+  if (key === 'bosses') return 'aion-boss-tracker-state-v1'
+  if (key === 'favorites') return 'aion-boss-tracker-favorites-v1'
+  return 'aion-boss-tracker-settings-v1'
 }
 
 /** Structured clone for IPC cannot carry Vue/Pinia Proxies. */

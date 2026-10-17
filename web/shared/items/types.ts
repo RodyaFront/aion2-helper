@@ -24,6 +24,12 @@ export type ItemDef = {
   /** Verteron Resources-layer spawn points (gather nodes). */
   gatherSpawnCount?: number
   hasGatherMap?: boolean
+  /** Altgard drop spawn points. */
+  altgardSpawnCount?: number
+  hasAltgardMap?: boolean
+  /** Altgard Resources-layer spawn points. */
+  altgardGatherSpawnCount?: number
+  hasAltgardGatherMap?: boolean
 }
 
 export type DropSource = {
@@ -78,8 +84,8 @@ export type MobDropLine = {
   max?: number | null
 }
 
-/** One Verteron mob from the drop index, with spawn points. */
-export type VerteronMob = {
+/** One region mob from the drop index, with spawn points. */
+export type RegionMob = {
   mobId: string
   nameEn: string
   nameRu: string | null
@@ -93,6 +99,9 @@ export type VerteronMob = {
   spawnCount: number
   spawns: MapPoint[]
 }
+
+/** @deprecated Use RegionMob */
+export type VerteronMob = RegionMob
 
 export type MobLootFile = {
   mobId: string
@@ -128,9 +137,11 @@ export type ItemFilterInput = {
   category: string
   itemType: string
   grade: string
-  /** Only items with local Verteron drop or gather markers. */
+  /** Only items with drop or gather markers for the active region. */
   onlyWithDropPoints: boolean
   /** Hide skins / titles / pets / wings / decor by default. */
   hideCosmetics: boolean
   sort: ItemSortKey
+  /** Active field region for «with coordinates» filter. */
+  regionId?: 'verteron' | 'altgard'
 }

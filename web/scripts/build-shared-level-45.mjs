@@ -1,27 +1,58 @@
 /**
- * Build Verteron shared drop table for effective level 45.
- * Takes non-own drops that appear on multiple normal Lv45 mobs (intersection),
- * falling back to union weighted by a canonical mob if intersection is thin.
+ * Build shared drop table for effective level 45 in a field region.
  *
- * Usage: node scripts/build-shared-level-45.mjs
+ * Usage:
+ *   node scripts/build-shared-level-45.mjs
+ *   node scripts/build-shared-level-45.mjs --region=altgard
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const outPath = path.join(root, 'shared', 'items', 'shared-levels', '45.json')
 
-/** Seed Lv45 Verteron normals from our drop sources (not named bosses). */
-const SEED_MOB_IDS = [
-  '2100655', // Confused Ursus
-  '2100178', // Bloodfang Pnyn
-  '2100177', // Furious Saursus
-  '2100141', // Blooming Korin
-  '2100617', // Black Tentacle Lawa
-  '2100665', // Torrent Spirit (canonical Natura)
-]
+const regionArg = process.argv.find((a) => a.startsWith('--region='))
+const region = (regionArg?.split('=')[1] || 'verteron').toLowerCase()
 
+const SEEDS = {
+  verteron: {
+    outFile: '45.json',
+    regionLabel: 'Verteron',
+    acceptLevels: [45],
+    seedMobIds: [
+      '2100655',
+      '2100178',
+      '2100177',
+      '2100141',
+      '2100617',
+      '2100665',
+    ],
+    preferMobId: '2100665',
+  },
+  altgard: {
+    outFile: '45-altgard.json',
+    regionLabel: 'Altgard',
+    // Altgard field normals peak at 44/46 rather than exact 45.
+    acceptLevels: [44, 45, 46],
+    seedMobIds: [
+      '2400701',
+      '2400706',
+      '2400705',
+      '2400653',
+      '2400703',
+      '2400735',
+    ],
+    preferMobId: '2400701',
+  },
+}
+
+const cfg = SEEDS[region]
+if (!cfg) {
+  console.error('Unsupported region:', region)
+  process.exit(1)
+}
+
+const outPath = path.join(root, 'shared', 'items', 'shared-levels', cfg.outFile)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 function isOwnDrop(d) {
@@ -29,7 +60,6 @@ function isOwnDrop(d) {
   const name = String(d.name || d.nameEn || '')
   if (/^pet$/i.test(cat) || /^soul\s*:/i.test(name)) return true
   if (/refining\s*stone/i.test(name)) return false
-  // Gear / weapons live in shared packages.
   if (
     /Gloves|Shoes|Boots|Helm|Cloak|Pauldrons|Greaves|Breastplate|Top|Legs|Mantle|Greatsword|Longsword|Dagger|Bow|Spellbook|Orb|Mace|Staff|Guard|Knife|Sword|Shield/i.test(
       cat,
@@ -88,10 +118,11 @@ async function fetchNpc(mobId) {
 }
 
 const perMobShared = []
-for (const mobId of SEED_MOB_IDS) {
+for (const mobId of cfg.seedMobIds) {
   const npc = await fetchNpc(mobId)
   await sleep(40)
-  if (!npc || Number(npc.level) !== 45) {
+  const level = Number(npc?.level)
+  if (!npc || !cfg.acceptLevels.includes(level)) {
     console.warn(`skip ${mobId}: level=${npc?.level ?? 'missing'}`)
     continue
   }
@@ -106,11 +137,10 @@ for (const mobId of SEED_MOB_IDS) {
 }
 
 if (perMobShared.length < 2) {
-  console.error('Need at least 2 Lv45 seed mobs')
+  console.error('Need at least 2 seed mobs')
   process.exit(1)
 }
 
-/** Item must appear on every seed mob (true shared table). */
 const [first, ...rest] = perMobShared
 const intersectionIds = [...first.byId.keys()].filter((id) =>
   rest.every((m) => m.byId.has(id)),
@@ -118,23 +148,22 @@ const intersectionIds = [...first.byId.keys()].filter((id) =>
 
 let drops = intersectionIds.map((id) => first.byId.get(id))
 
-// Prefer chances from Torrent Spirit when present (cleaner decimals).
-const torrent = perMobShared.find((m) => m.mobId === '2100665')
-if (torrent) {
-  drops = drops.map((d) => torrent.byId.get(d.itemId) || d)
+const prefer = perMobShared.find((m) => m.mobId === cfg.preferMobId)
+if (prefer) {
+  drops = drops.map((d) => prefer.byId.get(d.itemId) || d)
 }
 
 drops = sortDrops(drops)
 
 const payload = {
   level: 45,
-  regionId: 'verteron',
-  region: 'Verteron',
+  regionId: region,
+  region: cfg.regionLabel,
   scrapedAt: new Date().toISOString(),
   source: 'dbaion2.ru',
-  method: 'intersection-of-non-own-drops-across-lv45-normals',
+  method: 'intersection-of-non-own-drops-across-near-45-normals',
   seedMobIds: perMobShared.map((m) => m.mobId),
-  note: 'Shared reward_basic band for effective monster level 45 in Verteron. Compose with mob-own drops (Soul / species mats) when baseLevel < 45.',
+  note: `Shared reward_basic band for effective monster level 45 in ${cfg.regionLabel}. Compose with mob-own drops when baseLevel < 45.`,
   drops,
 }
 

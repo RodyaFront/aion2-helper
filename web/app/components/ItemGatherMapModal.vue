@@ -5,6 +5,8 @@ import {
 } from '../../shared/items/catalog'
 import { gradeClass } from '../../shared/items/grade'
 import type { ItemDef } from '../../shared/items/types'
+import { regionLabelEn } from '../../shared/map/regions'
+import { useSettingsStore } from '../../stores/settings'
 import GameMapModal from './GameMapModal.vue'
 import ItemIcon from './ItemIcon.vue'
 
@@ -13,19 +15,24 @@ const props = defineProps<{
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
+const settings = useSettingsStore()
+const regionId = computed(() => settings.regionId)
 
 const layer = computed(() =>
-  getGatherLayerForItem(props.item.itemId)
-  || getGatherLayerForItem(props.item.id),
+  getGatherLayerForItem(props.item.itemId, regionId.value)
+  || getGatherLayerForItem(props.item.id, regionId.value),
 )
 
-const scene = computed(() => createItemGatherMapScene(props.item))
+const scene = computed(() => createItemGatherMapScene(props.item, regionId.value))
 
-const totalMarkers = computed(() =>
-  layer.value?.spawns?.length
-  || props.item.gatherSpawnCount
-  || scene.value.markers.length,
-)
+const totalMarkers = computed(() => {
+  const fromLayer = layer.value?.spawns?.length || 0
+  if (fromLayer) return fromLayer
+  if (regionId.value === 'altgard') {
+    return props.item.altgardGatherSpawnCount || scene.value.markers.length
+  }
+  return props.item.gatherSpawnCount || scene.value.markers.length
+})
 
 const visibleCount = computed(() => scene.value.markers.length)
 
@@ -35,13 +42,15 @@ const layerTitle = computed(() =>
   || props.item.nameRu
   || props.item.nameEn,
 )
+
+const mapDescription = computed(() => `${regionLabelEn(regionId.value)} · сбор ${layerTitle.value}`)
 </script>
 
 <template>
   <GameMapModal
     v-model:open="open"
     :title="item.nameRu || item.nameEn"
-    :description="`Verteron · сбор ${layerTitle}`"
+    :description="mapDescription"
     :scene="scene"
     :cap-dom-markers="false"
   >

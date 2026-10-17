@@ -1,8 +1,9 @@
 import { shallowRef } from 'vue'
 import { DropChanceMarker, GatherNodeMarker, PortraitNodeMarker } from '../map/markers'
+import { mapDefinitionForRegion, regionLabelEn } from '../map/regions'
 import { createMapScene } from '../map/scene'
 import type { MapPoint, MapScene } from '../map/types'
-import { VERTERON_MAP_DEFINITION } from '../map/verteron'
+import type { RegionId } from '../race'
 import freshRawMeatDrops from './drops/fresh_raw_meat.json'
 import rawLeatherDrops from './drops/raw_leather.json'
 import refiningStoneDrops from './drops/refining_stone.json'
@@ -13,6 +14,7 @@ import {
   composeLootForPlayerLevel,
 } from './lootCompose'
 import sharedLevel45 from './shared-levels/45.json'
+import sharedLevel45Altgard from './shared-levels/45-altgard.json'
 import type {
   DropSource,
   ItemCatalogFile,
@@ -22,15 +24,17 @@ import type {
   ItemSortKey,
   MobDropLine,
   MobLootFile,
+  RegionMob,
   SharedLevelLootFile,
   VerteronMob,
 } from './types'
 
-export type { ItemDef, DropSource, ItemDropFile, MobDropLine, MobLootFile, VerteronMob } from './types'
+export type { ItemDef, DropSource, ItemDropFile, MobDropLine, MobLootFile, RegionMob, VerteronMob } from './types'
 export type { ItemFilterInput, ItemSortKey } from './types'
 export { ASSUMED_PLAYER_LEVEL, isOwnDrop } from './lootCompose'
 
 const SHARED_LEVEL_45 = sharedLevel45 as SharedLevelLootFile
+const SHARED_LEVEL_45_ALTGARD = sharedLevel45Altgard as SharedLevelLootFile
 
 /** Legacy seed files (slug keys) — fallback if drop index not loaded yet. */
 const SEED_DROPS: Record<string, ItemDropFile> = {
@@ -56,6 +60,8 @@ type DropIndexMob = {
   creatureName?: string | null
   race?: string | null
   spawns: DropSource['spawns']
+  /** Present when loot was scraped into the regional drop index (e.g. Altgard). */
+  drops?: MobDropLine[] | null
 }
 
 type DropIndexFile = {
@@ -81,12 +87,28 @@ type GatherIndexFile = {
   items: Record<string, string>
 }
 
-let dropIndex: DropIndexFile | null = null
-let dropIndexPromise: Promise<DropIndexFile | null> | null = null
-const composedDropCache = new Map<string, ItemDropFile | null>()
+const dropIndexes = new Map<RegionId, DropIndexFile | null>()
+const dropIndexPromises = new Map<RegionId, Promise<DropIndexFile | null>>()
+const composedDropCaches = new Map<RegionId, Map<string, ItemDropFile | null>>()
 
+const gatherIndexes = new Map<RegionId, GatherIndexFile | null>()
+const gatherIndexPromises = new Map<RegionId, Promise<GatherIndexFile | null>>()
+
+/** @deprecated Active region indexes — prefer ensure*Index(regionId). */
+let dropIndex: DropIndexFile | null = null
 let gatherIndex: GatherIndexFile | null = null
-let gatherIndexPromise: Promise<GatherIndexFile | null> | null = null
+
+function dropFileName(regionId: RegionId): string {
+  return regionId === 'altgard' ? 'item-drop-index-altgard.json' : 'item-drop-index.json'
+}
+
+function gatherFileName(regionId: RegionId): string {
+  return regionId === 'altgard' ? 'item-gather-index-altgard.json' : 'item-gather-index.json'
+}
+
+function regionDisplayName(regionId: RegionId): string {
+  return regionLabelEn(regionId)
+}
 
 /** Eager map of ./mobs/{mobId}.json → loot table. */
 const mobLootModules = import.meta.glob('./mobs/*.json', { eager: true, import: 'default' }) as Record<
@@ -166,30 +188,36 @@ function resolveNumericItemId(key: string): string {
   return SEED_SLUG_TO_ITEM_ID[key] || key
 }
 
-function composeDropFileFromIndex(itemId: string): ItemDropFile | null {
-  if (!dropIndex) return null
-  if (composedDropCache.has(itemId)) return composedDropCache.get(itemId) ?? null
+function composeDropFileFromIndex(itemId: string, regionId: RegionId = 'verteron'): ItemDropFile | null {
+  const index = dropIndexes.get(regionId) ?? (regionId === 'verteron' ? dropIndex : null)
+  if (!index) return null
+  let cache = composedDropCaches.get(regionId)
+  if (!cache) {
+    cache = new Map()
+    composedDropCaches.set(regionId, cache)
+  }
+  if (cache.has(itemId)) return cache.get(itemId) ?? null
 
-  const links = dropIndex.items[itemId]
+  const links = index.items[itemId]
   if (!links?.length) {
-    composedDropCache.set(itemId, null)
+    cache.set(itemId, null)
     return null
   }
 
   const sources: DropSource[] = []
   for (const link of links) {
-    const mob = dropIndex.mobs[link.mobId]
+    const mob = index.mobs[link.mobId]
     if (!mob?.spawns?.length) continue
     sources.push({
       mobId: link.mobId,
       nameEn: mob.nameEn || `NPC ${link.mobId}`,
       nameRu: mob.nameRu ?? null,
       level: mob.level ?? null,
-      region: 'Verteron',
-      regionId: 'verteron',
+      region: regionDisplayName(regionId),
+      regionId,
       rate: link.rate,
       hasMap: true,
-      onmapUrl: `https://dbaion2.ru/en/map/#verteron&npc=${link.mobId}`,
+      onmapUrl: `https://dbaion2.ru/en/map/#${regionId}&npc=${link.mobId}`,
       icon: mob.icon ?? null,
       iconUrl: mob.iconUrl ?? null,
       title: mob.title ?? null,
@@ -201,81 +229,99 @@ function composeDropFileFromIndex(itemId: string): ItemDropFile | null {
   }
 
   if (!sources.length) {
-    composedDropCache.set(itemId, null)
+    cache.set(itemId, null)
     return null
   }
 
   sources.sort((a, b) => b.rate - a.rate || a.nameEn.localeCompare(b.nameEn, 'en'))
   const file: ItemDropFile = {
     itemId,
-    scrapedAt: dropIndex.scrapedAt || '',
-    source: dropIndex.source || 'dbaion2.ru',
+    scrapedAt: index.scrapedAt || '',
+    source: index.source || 'dbaion2.ru',
     sourceUrl: `https://dbaion2.ru/en/items/${itemId}/`,
     sources,
   }
-  composedDropCache.set(itemId, file)
+  cache.set(itemId, file)
   return file
 }
 
-export async function ensureItemDropIndex(): Promise<DropIndexFile | null> {
-  if (dropIndex) return dropIndex
-  if (dropIndexPromise) return dropIndexPromise
+export async function ensureItemDropIndex(regionId: RegionId = 'verteron'): Promise<DropIndexFile | null> {
+  if (dropIndexes.has(regionId) && dropIndexes.get(regionId)) {
+    dropIndex = dropIndexes.get(regionId) ?? null
+    return dropIndexes.get(regionId) ?? null
+  }
+  const pending = dropIndexPromises.get(regionId)
+  if (pending) return pending
 
-  dropIndexPromise = (async () => {
-    const res = await fetch(publicDataUrl('item-drop-index.json'), {
+  const promise = (async () => {
+    const res = await fetch(publicDataUrl(dropFileName(regionId)), {
       cache: 'no-store',
       headers: { accept: 'application/json' },
     })
     if (!res.ok) {
-      console.warn(`Item drop index HTTP ${res.status}`)
+      console.warn(`Item drop index (${regionId}) HTTP ${res.status}`)
+      dropIndexes.set(regionId, null)
       return null
     }
     const data = (await res.json()) as DropIndexFile
-    dropIndex = data
-    composedDropCache.clear()
+    dropIndexes.set(regionId, data)
+    composedDropCaches.set(regionId, new Map())
+    if (regionId === 'verteron') dropIndex = data
     return data
   })().catch((err: unknown) => {
-    console.warn('Item drop index failed', err)
-    dropIndexPromise = null
+    console.warn(`Item drop index (${regionId}) failed`, err)
+    dropIndexPromises.delete(regionId)
     return null
   })
 
-  return dropIndexPromise
+  dropIndexPromises.set(regionId, promise)
+  return promise
 }
 
-export async function ensureItemGatherIndex(): Promise<GatherIndexFile | null> {
-  if (gatherIndex) return gatherIndex
-  if (gatherIndexPromise) return gatherIndexPromise
+export async function ensureItemGatherIndex(regionId: RegionId = 'verteron'): Promise<GatherIndexFile | null> {
+  if (gatherIndexes.has(regionId) && gatherIndexes.get(regionId)) {
+    gatherIndex = gatherIndexes.get(regionId) ?? null
+    return gatherIndexes.get(regionId) ?? null
+  }
+  const pending = gatherIndexPromises.get(regionId)
+  if (pending) return pending
 
-  gatherIndexPromise = (async () => {
-    const res = await fetch(publicDataUrl('item-gather-index.json'), {
+  const promise = (async () => {
+    const res = await fetch(publicDataUrl(gatherFileName(regionId)), {
       cache: 'no-store',
       headers: { accept: 'application/json' },
     })
     if (!res.ok) {
-      console.warn(`Item gather index HTTP ${res.status}`)
+      console.warn(`Item gather index (${regionId}) HTTP ${res.status}`)
+      gatherIndexes.set(regionId, null)
       return null
     }
     const data = (await res.json()) as GatherIndexFile
-    gatherIndex = data
+    gatherIndexes.set(regionId, data)
+    if (regionId === 'verteron') gatherIndex = data
     return data
   })().catch((err: unknown) => {
-    console.warn('Item gather index failed', err)
-    gatherIndexPromise = null
+    console.warn(`Item gather index (${regionId}) failed`, err)
+    gatherIndexPromises.delete(regionId)
     return null
   })
 
-  return gatherIndexPromise
+  gatherIndexPromises.set(regionId, promise)
+  return promise
 }
 
-export function getGatherLayerForItem(itemId: string): GatherIndexLayer | null {
-  if (!gatherIndex) return null
-  const layerId = gatherIndex.items[itemId]
+export function getGatherLayerForItem(itemId: string, regionId: RegionId = 'verteron'): GatherIndexLayer | null {
+  const index = gatherIndexes.get(regionId) ?? (regionId === 'verteron' ? gatherIndex : null)
+  if (!index) return null
+  const layerId = index.items[itemId]
   if (!layerId) return null
-  return gatherIndex.layers[layerId] ?? null
+  return index.layers[layerId] ?? null
 }
 
-export function itemHasMap(item: ItemDef): boolean {
+export function itemHasMap(item: ItemDef, regionId: RegionId = 'verteron'): boolean {
+  if (regionId === 'altgard') {
+    return Boolean(item.hasAltgardMap || item.hasAltgardGatherMap)
+  }
   return Boolean(item.hasVerteronMap || item.hasGatherMap)
 }
 
@@ -284,13 +330,17 @@ function normalizeCatalogItem(item: ItemDef): ItemDef {
     ...item,
     gatherSpawnCount: item.gatherSpawnCount ?? 0,
     hasGatherMap: Boolean(item.hasGatherMap),
+    altgardSpawnCount: item.altgardSpawnCount ?? 0,
+    hasAltgardMap: Boolean(item.hasAltgardMap),
+    altgardGatherSpawnCount: item.altgardGatherSpawnCount ?? 0,
+    hasAltgardGatherMap: Boolean(item.hasAltgardGatherMap),
   }
 }
 
-export async function ensureItemCatalog(): Promise<ItemDef[]> {
+export async function ensureItemCatalog(regionId: RegionId = 'verteron'): Promise<ItemDef[]> {
   if (catalogStatus.value === 'ready' && catalogItems.value.length) {
-    void ensureItemDropIndex()
-    void ensureItemGatherIndex()
+    void ensureItemDropIndex(regionId)
+    void ensureItemGatherIndex(regionId)
     return catalogItems.value
   }
   if (loadPromise) return loadPromise
@@ -304,8 +354,8 @@ export async function ensureItemCatalog(): Promise<ItemDef[]> {
         cache: 'no-store',
         headers: { accept: 'application/json' },
       }),
-      ensureItemDropIndex(),
-      ensureItemGatherIndex(),
+      ensureItemDropIndex(regionId),
+      ensureItemGatherIndex(regionId),
     ])
     if (!res.ok) throw new Error(`Catalog HTTP ${res.status}`)
     const data = (await res.json()) as ItemCatalogFile
@@ -334,52 +384,71 @@ export function getItem(id: string): ItemDef | null {
   return byId.get(id) ?? null
 }
 
-export function getItemDrops(itemKey: string): ItemDropFile | null {
-  if (SEED_DROPS[itemKey]) return SEED_DROPS[itemKey]
+export function getItemDrops(itemKey: string, regionId: RegionId = 'verteron'): ItemDropFile | null {
+  if (regionId === 'verteron' && SEED_DROPS[itemKey]) return SEED_DROPS[itemKey]
   const itemId = resolveNumericItemId(itemKey)
-  const fromIndex = composeDropFileFromIndex(itemId)
+  const fromIndex = composeDropFileFromIndex(itemId, regionId)
   if (fromIndex) return fromIndex
-  // Slug seed fallback when index missing
-  for (const [slug, id] of Object.entries(SEED_SLUG_TO_ITEM_ID)) {
-    if (id === itemId && SEED_DROPS[slug]) return SEED_DROPS[slug]
+  if (regionId === 'verteron') {
+    for (const [slug, id] of Object.entries(SEED_SLUG_TO_ITEM_ID)) {
+      if (id === itemId && SEED_DROPS[slug]) return SEED_DROPS[slug]
+    }
   }
   return null
 }
 
-export function getItemDropSource(itemKey: string, mobId: string): DropSource | null {
-  const file = getItemDrops(itemKey)
+export function getItemDropSource(
+  itemKey: string,
+  mobId: string,
+  regionId: RegionId = 'verteron',
+): DropSource | null {
+  const file = getItemDrops(itemKey, regionId)
   if (!file) return null
   return file.sources.find((s) => s.mobId === mobId) ?? null
 }
 
-export function getMobLoot(mobId: string): MobLootFile | null {
-  return mobLootById.get(String(mobId)) ?? null
+export function getMobLoot(mobId: string, regionId: RegionId = 'verteron'): MobLootFile | null {
+  const local = mobLootById.get(String(mobId))
+  if (local) return local
+  const index = dropIndexes.get(regionId) ?? (regionId === 'verteron' ? dropIndex : null)
+  const mob = index?.mobs?.[String(mobId)]
+  if (!mob?.drops?.length) return null
+  return {
+    mobId: String(mobId),
+    scrapedAt: index?.scrapedAt || '',
+    source: index?.source || 'dbaion2.ru',
+    baseLevel: mob.level ?? null,
+    drops: mob.drops,
+  }
 }
 
-export function getSharedLevelLoot(level: number, regionId = 'verteron'): SharedLevelLootFile | null {
-  if (level === 45 && regionId === 'verteron') return SHARED_LEVEL_45
-  return null
+export function getSharedLevelLoot(level: number, regionId: RegionId = 'verteron'): SharedLevelLootFile | null {
+  if (level !== 45) return null
+  if (regionId === 'altgard') return SHARED_LEVEL_45_ALTGARD
+  return SHARED_LEVEL_45
 }
 
 /**
  * Loot as seen by a high-level character: for baseLevel < playerLevel,
- * keep mob-own rewards and attach the shared Verteron Lv45 band.
+ * keep mob-own rewards and attach the shared Lv45 band for the region.
  */
 export function getMobLootForPlayer(
   mobId: string,
   opts?: {
     baseLevel?: number | null
     playerLevel?: number
+    regionId?: RegionId
     /** Default true — attach shared Lv45 band for low baseLevel mobs. */
     useSharedScaling?: boolean
   },
 ): MobLootView | null {
-  const file = getMobLoot(mobId)
+  const regionId = opts?.regionId ?? 'verteron'
+  const file = getMobLoot(mobId, regionId)
   if (!file) return null
   const playerLevel = opts?.playerLevel ?? ASSUMED_PLAYER_LEVEL
   const baseLevel = opts?.baseLevel ?? file.baseLevel ?? null
   const useSharedScaling = opts?.useSharedScaling !== false
-  const shared = getSharedLevelLoot(playerLevel, 'verteron')
+  const shared = getSharedLevelLoot(playerLevel, regionId)
   const composed = composeLootForPlayerLevel({
     baseDrops: file.drops || [],
     sharedDrops: shared?.drops || [],
@@ -414,7 +483,7 @@ function compareByLocalizedName(a: ItemDef, b: ItemDef): number {
   return n || a.itemId.localeCompare(b.itemId, 'en', { numeric: true })
 }
 
-function sortItems(list: ItemDef[], sort: ItemSortKey): ItemDef[] {
+function sortItems(list: ItemDef[], sort: ItemSortKey, regionId: RegionId = 'verteron'): ItemDef[] {
   const out = list.slice()
   out.sort((a, b) => {
     switch (sort) {
@@ -433,8 +502,8 @@ function sortItems(list: ItemDef[], sort: ItemSortKey): ItemDef[] {
       case 'id':
         return a.itemId.localeCompare(b.itemId, 'en', { numeric: true })
       case 'map': {
-        const aMap = itemHasMap(a)
-        const bMap = itemHasMap(b)
+        const aMap = itemHasMap(a, regionId)
+        const bMap = itemHasMap(b, regionId)
         if (aMap !== bMap) return aMap ? -1 : 1
         return compareByLocalizedName(a, b)
       }
@@ -450,6 +519,7 @@ export function filterItems(
   input: ItemFilterInput,
   source: ItemDef[] = catalogItems.value,
 ): ItemDef[] {
+  const regionId = input.regionId ?? 'verteron'
   const q = normalizeSearch(input.query.trim())
   const gradeKey = input.grade !== 'all' ? normalizeItemGrade(input.grade) : null
   const typeKey = input.itemType !== 'all' ? input.itemType.toUpperCase() : null
@@ -462,7 +532,7 @@ export function filterItems(
     if (gradeKey && gradeKey !== 'unknown' && normalizeItemGrade(item.grade) !== gradeKey) {
       return false
     }
-    if (input.onlyWithDropPoints && !itemHasMap(item)) return false
+    if (input.onlyWithDropPoints && !itemHasMap(item, regionId)) return false
     if (!q) return true
     const hay = normalizeSearch(
       `${item.nameEn} ${item.nameRu} ${item.itemId} ${item.category} ${item.categoryName || ''}`,
@@ -470,7 +540,7 @@ export function filterItems(
     return hay.includes(q)
   })
 
-  return sortItems(matched, input.sort)
+  return sortItems(matched, input.sort, regionId)
 }
 
 export function buildCategoryOptions(source: ItemDef[] = catalogItems.value) {
@@ -517,10 +587,10 @@ function dropLookupKeys(item: ItemDef | string): string[] {
   return [...new Set(keys.filter(Boolean))]
 }
 
-export function getItemDropMarkers(itemKey: string, regionId = 'verteron'): DropChanceMarker[] {
+export function getItemDropMarkers(itemKey: string, regionId: RegionId = 'verteron'): DropChanceMarker[] {
   let file: ItemDropFile | null = null
   for (const key of dropLookupKeys(itemKey)) {
-    file = getItemDrops(key)
+    file = getItemDrops(key, regionId)
     if (file) break
   }
   if (!file) return []
@@ -545,11 +615,12 @@ export function getItemDropMarkers(itemKey: string, regionId = 'verteron'): Drop
 
 export function createItemDropMapScene(
   item: ItemDef,
-  opts?: { minRate?: number, maxRate?: number },
+  opts?: { minRate?: number, maxRate?: number, regionId?: RegionId },
 ): MapScene {
-  let markers = getItemDropMarkers(item.itemId, 'verteron')
+  const regionId = opts?.regionId ?? 'verteron'
+  let markers = getItemDropMarkers(item.itemId, regionId)
   if (!markers.length && item.id !== item.itemId) {
-    markers = getItemDropMarkers(item.id, 'verteron')
+    markers = getItemDropMarkers(item.id, regionId)
   }
   const lo = opts?.minRate
   const hi = opts?.maxRate
@@ -558,12 +629,12 @@ export function createItemDropMapScene(
     const maxR = hi ?? Number.POSITIVE_INFINITY
     markers = markers.filter((m) => m.rate >= minR && m.rate <= maxR)
   }
+  const label = regionDisplayName(regionId)
   return createMapScene({
-    map: VERTERON_MAP_DEFINITION,
+    map: mapDefinitionForRegion(regionId),
     markers,
-    // No focusPoint: camera fits all drop markers (not an arbitrary first spawn).
     focusPoint: null,
-    emptyMessage: 'Нет координат дропа в выбранном диапазоне.',
+    emptyMessage: `Нет координат дропа на карте ${label}.`,
     focusLabel: 'Все координаты',
     hintExtra: markers.length
       ? `${markers.length} координат · клик по % — карточка моба`
@@ -571,11 +642,12 @@ export function createItemDropMapScene(
   })
 }
 
-export function getItemGatherMarkers(itemId: string): GatherNodeMarker[] {
-  if (!gatherIndex) return []
-  const layerId = gatherIndex.items[itemId]
+export function getItemGatherMarkers(itemId: string, regionId: RegionId = 'verteron'): GatherNodeMarker[] {
+  const index = gatherIndexes.get(regionId) ?? (regionId === 'verteron' ? gatherIndex : null)
+  if (!index) return []
+  const layerId = index.items[itemId]
   if (!layerId) return []
-  const layer = gatherIndex.layers[layerId]
+  const layer = index.layers[layerId]
   if (!layer?.spawns?.length) return []
   const name = layer.nameRu || layer.nameEn
   const iconUrl = layer.iconUrl ?? null
@@ -590,10 +662,11 @@ export function getItemGatherMarkers(itemId: string): GatherNodeMarker[] {
   )
 }
 
-export function listVerteronMobs(): VerteronMob[] {
-  if (!dropIndex) return []
-  const out: VerteronMob[] = []
-  for (const [mobId, mob] of Object.entries(dropIndex.mobs)) {
+export function listRegionMobs(regionId: RegionId = 'verteron'): RegionMob[] {
+  const index = dropIndexes.get(regionId) ?? (regionId === 'verteron' ? dropIndex : null)
+  if (!index) return []
+  const out: RegionMob[] = []
+  for (const [mobId, mob] of Object.entries(index.mobs)) {
     const spawns = mob.spawns ?? []
     out.push({
       mobId,
@@ -616,7 +689,15 @@ export function listVerteronMobs(): VerteronMob[] {
   return out
 }
 
-export function createMonsterSpawnScene(mob: VerteronMob): MapScene {
+/** @deprecated Use listRegionMobs('verteron') */
+export function listVerteronMobs(): VerteronMob[] {
+  return listRegionMobs('verteron')
+}
+
+export function createMonsterSpawnScene(
+  mob: RegionMob,
+  regionId: RegionId = 'verteron',
+): MapScene {
   const name = mob.nameRu || mob.nameEn
   const markers = (mob.spawns ?? []).map((pt, idx) =>
     new PortraitNodeMarker(
@@ -627,11 +708,12 @@ export function createMonsterSpawnScene(mob: VerteronMob): MapScene {
       mob.iconUrl,
     ),
   )
+  const label = regionDisplayName(regionId)
   return createMapScene({
-    map: VERTERON_MAP_DEFINITION,
+    map: mapDefinitionForRegion(regionId),
     markers,
     focusPoint: null,
-    emptyMessage: 'Нет координат спауна на карте Verteron.',
+    emptyMessage: `Нет координат спауна на карте ${label}.`,
     focusLabel: 'Все координаты',
     hintExtra: markers.length
       ? `${markers.length} координат · клик по портрету — дроп`
@@ -639,16 +721,20 @@ export function createMonsterSpawnScene(mob: VerteronMob): MapScene {
   })
 }
 
-export function createItemGatherMapScene(item: ItemDef): MapScene {
-  let markers = getItemGatherMarkers(item.itemId)
+export function createItemGatherMapScene(
+  item: ItemDef,
+  regionId: RegionId = 'verteron',
+): MapScene {
+  let markers = getItemGatherMarkers(item.itemId, regionId)
   if (!markers.length && item.id !== item.itemId) {
-    markers = getItemGatherMarkers(item.id)
+    markers = getItemGatherMarkers(item.id, regionId)
   }
+  const label = regionDisplayName(regionId)
   return createMapScene({
-    map: VERTERON_MAP_DEFINITION,
+    map: mapDefinitionForRegion(regionId),
     markers,
     focusPoint: null,
-    emptyMessage: 'Нет координат сбора на карте Verteron.',
+    emptyMessage: `Нет координат сбора на карте ${label}.`,
     focusLabel: 'Все координаты',
     hintExtra: markers.length
       ? `${markers.length} координат сбора`

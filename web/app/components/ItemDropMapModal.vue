@@ -11,6 +11,8 @@ import {
 import { gradeClass } from '../../shared/items/grade'
 import type { DropSource, ItemDef } from '../../shared/items/types'
 import type { IMapMarker } from '../../shared/map/types'
+import { regionLabelEn } from '../../shared/map/regions'
+import { useSettingsStore } from '../../stores/settings'
 import GameMapModal from './GameMapModal.vue'
 import ItemIcon from './ItemIcon.vue'
 import LootTable from './LootTable.vue'
@@ -26,6 +28,8 @@ const props = defineProps<{
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
+const settings = useSettingsStore()
+const regionId = computed(() => settings.regionId)
 
 const cluster = new SameMobTypeZoomCluster(36)
 
@@ -33,14 +37,15 @@ const rateMin = ref(DEFAULT_RATE_MIN)
 const rateMax = ref(DEFAULT_RATE_MAX)
 const countMin = ref(DEFAULT_COUNT_MIN)
 const countMax = ref(DEFAULT_COUNT_MAX)
-/** When on, low-level mobs use shared Verteron Lv45 loot in the detail modal. */
+/** When on, low-level mobs use shared Lv45 loot in the detail modal. */
 const after45Level = ref(true)
 const infoTipOpen = ref(false)
 const showSharedLoot = ref(false)
 const infoTipRef = ref<{ hide: () => void } | null>(null)
 
-const sharedLootFile = computed(() => getSharedLevelLoot(ASSUMED_PLAYER_LEVEL, 'verteron'))
+const sharedLootFile = computed(() => getSharedLevelLoot(ASSUMED_PLAYER_LEVEL, regionId.value))
 const sharedLootDrops = computed(() => sharedLootFile.value?.drops ?? [])
+const mapDescription = computed(() => `${regionLabelEn(regionId.value)} · координаты дропа`)
 
 function openSharedLootModal() {
   infoTipRef.value?.hide()
@@ -49,9 +54,9 @@ function openSharedLootModal() {
 }
 
 const totalMarkers = computed(() => {
-  const byItemId = getItemDropMarkers(props.item.itemId, 'verteron').length
+  const byItemId = getItemDropMarkers(props.item.itemId, regionId.value).length
   if (byItemId) return byItemId
-  return getItemDropMarkers(props.item.id, 'verteron').length
+  return getItemDropMarkers(props.item.id, regionId.value).length
 })
 
 const filterBounds = computed(() => {
@@ -62,7 +67,7 @@ const filterBounds = computed(() => {
   lo = Math.max(0, Math.min(100, lo))
   hi = Math.max(0, Math.min(100, hi))
   if (lo > hi) [lo, hi] = [hi, lo]
-  return { minRate: lo, maxRate: hi }
+  return { minRate: lo, maxRate: hi, regionId: regionId.value }
 })
 
 const countBounds = computed(() => {
@@ -88,8 +93,8 @@ const selectedClusterCount = ref<number | null>(null)
 
 function onSelectMarker(marker: IMapMarker) {
   if (!marker.mobId) return
-  const source = getItemDropSource(props.item.itemId, marker.mobId)
-    || getItemDropSource(props.item.id, marker.mobId)
+  const source = getItemDropSource(props.item.itemId, marker.mobId, regionId.value)
+    || getItemDropSource(props.item.id, marker.mobId, regionId.value)
   if (!source) return
   selectedSource.value = source
   selectedClusterCount.value = marker.kind === 'cluster'
@@ -132,7 +137,7 @@ watch(open, (isOpen) => {
   <GameMapModal
     v-model:open="open"
     :title="item.nameRu || item.nameEn"
-    :description="`Verteron · дроп ${item.nameEn}`"
+    :description="`${mapDescription} · ${item.nameEn}`"
     :scene="scene"
     :cluster-strategy="cluster"
     :min-mob-count="countBounds.minMobCount"
@@ -330,7 +335,7 @@ watch(open, (isOpen) => {
 
   <UiAppModal
     v-model:open="showSharedLoot"
-    title="Shared лут · Verteron Lv45"
+    :title="`Shared лут · ${regionLabelEn(regionId)} Lv45`"
     description="Общая таблица дропа для эффективного уровня 45. Накладывается на собственный лут моба (Soul, материалы вида)."
     size="md"
     panel-class="shared-loot-modal-panel"

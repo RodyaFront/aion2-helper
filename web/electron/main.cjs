@@ -72,7 +72,11 @@ function publicRoot() {
 }
 
 function statePath(key) {
-  const name = key === 'settings' ? 'tracker-settings.json' : 'tracker-state.json'
+  const name = key === 'settings'
+    ? 'tracker-settings.json'
+    : key === 'favorites'
+      ? 'tracker-favorites.json'
+      : 'tracker-state.json'
   return path.join(app.getPath('userData'), name)
 }
 
@@ -305,7 +309,7 @@ async function createWindow() {
 
 ipcMain.handle('tracker:load-state', (_event, key) => {
   try {
-    const file = statePath(key === 'settings' ? 'settings' : 'bosses')
+    const file = statePath(key === 'settings' || key === 'favorites' ? key : 'bosses')
     if (!fs.existsSync(file)) return null
     return JSON.parse(fs.readFileSync(file, 'utf8'))
   }
@@ -316,7 +320,7 @@ ipcMain.handle('tracker:load-state', (_event, key) => {
 
 ipcMain.handle('tracker:save-state', (_event, key, data) => {
   try {
-    const file = statePath(key === 'settings' ? 'settings' : 'bosses')
+    const file = statePath(key === 'settings' || key === 'favorites' ? key : 'bosses')
     fs.mkdirSync(path.dirname(file), { recursive: true })
     // Re-serialize so Vue/Pinia proxies never reach disk half-written.
     fs.writeFileSync(file, JSON.stringify(data), 'utf8')

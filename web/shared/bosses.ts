@@ -43,6 +43,45 @@ export const VERTERON_BOSSES: BossDef[] = [
 ]
 
 /**
+ * Altgard field bosses (Asmodian). Same kill-based respawn tiers as Verteron
+ * after the Dec 2025 interval shortening. Ids are prefixed so shared names
+ * (Silent Dartan, Kashapa, Lagta, Gartua) keep separate timers.
+ * EN names/locations: MetaBot / grimvane; RU names: dbaion2.ru Altgard map.
+ */
+export const ALTGARD_BOSSES: BossDef[] = [
+  { id: 'altgard_melted_danar', name: 'Melted Danar', nameRu: 'Расплавленный Данар', location: 'Dredgion Crash Site', locationRu: 'Место крушения дреджна', respawnMinutes: 30, image: '' },
+  { id: 'altgard_black_warrior_aed', name: 'Black Warrior Aed', nameRu: 'Черный воин Аэд', location: 'Nameless Cemetery', locationRu: 'Безымянное кладбище', respawnMinutes: 30, image: '' },
+  { id: 'altgard_faithful_rajit', name: 'Faithful Rajit', nameRu: 'Верный Ладжит', location: 'Sanctum Outpost', locationRu: 'Застава святилища', respawnMinutes: 30, image: '' },
+  { id: 'altgard_berserker_vargor', name: 'Berserker Vargor', nameRu: 'Берсерк Вальг', location: 'Sanctum Outpost', locationRu: 'Застава святилища', respawnMinutes: 60, image: '' },
+  { id: 'altgard_blood_warrior_lannar', name: 'Blood Warrior Lannar', nameRu: 'Воин крови Ланнар', location: 'Moslan Forest', locationRu: 'Лес Мослан', respawnMinutes: 90, image: '' },
+  { id: 'altgard_predator_garsan', name: 'Predator Garsan', nameRu: 'Хищник Гарсан', location: 'Moslan Forest', locationRu: 'Лес Мослан', respawnMinutes: 120, image: '' },
+  { id: 'altgard_deceiver_trid', name: 'Deceiver Trid', nameRu: 'Притворщица Трида', location: 'Uruthumheim', locationRu: 'Уртумхейм', respawnMinutes: 120, image: '' },
+  { id: 'altgard_blue_wave_kelpina', name: 'Blue Wave Kelpina', nameRu: 'Келпина лазурной волны', location: 'Purifying Forest', locationRu: 'Очищающий лес', respawnMinutes: 120, image: '' },
+  { id: 'altgard_high_overseer_nutah', name: 'High Overseer Nutah', nameRu: 'Главный надзиратель Нута', location: 'Dranactus', locationRu: 'Дранактус', respawnMinutes: 120, image: '' },
+  { id: 'altgard_advisor_resana', name: 'Advisor Resana', nameRu: 'Советник Рсан', location: 'Dranactus', locationRu: 'Дранактус', respawnMinutes: 180, image: '' },
+  { id: 'altgard_ops_leader_linx', name: 'Special Operations Leader Linx', nameRu: 'Капитан спецотряда Линкс', location: 'Basfelt Ruins', locationRu: 'Руины Басфельта', respawnMinutes: 180, image: '' },
+  { id: 'altgard_addicted_hardirun', name: 'Addicted Hardirun', nameRu: 'Одурманенный Хадирун', location: 'Fafnite Deposit', locationRu: 'Залежи фафнита', respawnMinutes: 180, image: '' },
+  { id: 'altgard_veteran_shujakan', name: 'Veteran Shujakan', nameRu: 'Ветеран Шужакан', location: 'Black Claw Village', locationRu: 'Деревня Черного Когтя', respawnMinutes: 180, image: '' },
+  { id: 'altgard_desecrator_newbold', name: 'Desecrator Newbold', nameRu: 'Осквернитель Ноблуд', location: 'Legion Base Ruins', locationRu: 'Руины базы легиона', respawnMinutes: 240, image: '' },
+  { id: 'altgard_specter_axios', name: 'Specter Archon Axios', nameRu: 'Акан потерянных душ Аксиос', location: 'Basfelt Ruins', locationRu: 'Руины Басфельта', respawnMinutes: 240, image: '' },
+  { id: 'altgard_executioner_barthien', name: 'Executioner Barthien', nameRu: 'Эмиссар Варсиен', location: 'Western Gribade Highland', locationRu: 'Запад Грибадского нагорья', respawnMinutes: 240, image: '' },
+  { id: 'altgard_visionary_karuka', name: 'Visionary Karuka', nameRu: 'Визионер Карука', location: 'Black Claw Village', locationRu: 'Деревня Черного Когтя', respawnMinutes: 240, image: '' },
+  { id: 'altgard_weapon_guruta', name: 'Drakan Battalion Weapon Guruta', nameRu: 'Биооружие отряда драканов Гурута', location: 'Eastern Gribade Highland', locationRu: 'Восток Грибадского нагорья', respawnMinutes: 360, image: '' },
+  { id: 'altgard_dark_shadow_vishwada', name: 'Dark Shadow Vishwada', nameRu: 'Вишвада темной тени', location: 'Lagta Fortress', locationRu: 'Крепость Рагта', respawnMinutes: 360, image: '' },
+  { id: 'altgard_sharp_shylak', name: 'Sharp Shylak', nameRu: 'Острый Шурак', location: 'Impetusium Square', locationRu: 'Площадь Импетусиум', respawnMinutes: 360, image: '' },
+  { id: 'altgard_silent_dartan', name: 'Silent Dartan', nameRu: 'Немая Тартан', location: 'Basfelt Ruins', locationRu: 'Руины Басфельта', respawnMinutes: 360, image: '' },
+  { id: 'altgard_soul_kashapa', name: 'Soul Ruler Kashapa', nameRu: 'Властелин душ Кашапа', location: 'Fafnite Deposit', locationRu: 'Залежи фафнита', respawnMinutes: 360, image: '' },
+  { id: 'altgard_high_commander_lagta', name: 'High Commander Lagta', nameRu: 'Глава армии Рагт', location: 'Lagta Fortress', locationRu: 'Крепость Рагта', respawnMinutes: 720, image: '' },
+  { id: 'altgard_immortal_gartua', name: 'Immortal Gartua', nameRu: 'Бессмертный Гартуа', location: 'Immortal Isle', locationRu: 'Остров бессмертия', respawnMinutes: 720, image: '' },
+]
+
+export type BossRegionId = 'verteron' | 'altgard'
+
+export function bossesForRegion(regionId: BossRegionId): BossDef[] {
+  return regionId === 'altgard' ? ALTGARD_BOSSES : VERTERON_BOSSES
+}
+
+/**
  * Seconds-before-respawn warnings (mild → aggressive).
  * 15m ping · 10m warning · 10s ALERT
  */

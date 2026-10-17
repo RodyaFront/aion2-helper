@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { Package, Settings, Swords, Timer } from '@lucide/vue'
+import {
+  RACE_LABEL_RU,
+  REGION_LABEL_RU,
+  type PlayerRace,
+} from '../../shared/race'
+import { useSettingsStore } from '../../stores/settings'
 
 const route = useRoute()
 const showSettings = ref(false)
+const settings = useSettingsStore()
 
 const nav = [
   { to: '/', label: 'Боссы', hint: 'Таймеры полевых боссов', icon: Timer },
@@ -10,10 +17,24 @@ const nav = [
   { to: '/monsters', label: 'Монстры', hint: 'Спаун и дроп', icon: Swords },
 ] as const
 
+const raceOptions: Array<{ id: PlayerRace, label: string }> = [
+  { id: 'elyos', label: 'Элийцы' },
+  { id: 'asmodian', label: 'Асмодиане' },
+]
+
+const brandSub = computed(() => {
+  const race = settings.race
+  return `${RACE_LABEL_RU[race]} · ${REGION_LABEL_RU[settings.regionId]}`
+})
+
 function isNavActive(to: string) {
   const path = route.path || '/'
   if (to === '/') return path === '/'
   return path === to || path.startsWith(`${to}/`)
+}
+
+function setRace(race: PlayerRace) {
+  settings.setRace(race)
 }
 </script>
 
@@ -25,8 +46,25 @@ function isNavActive(to: string) {
           AION 2
         </p>
         <p class="sidebar-brand-sub">
-          Lamuatan · Verteron
+          {{ brandSub }}
         </p>
+        <div
+          class="sidebar-race"
+          role="group"
+          aria-label="Раса"
+        >
+          <button
+            v-for="opt in raceOptions"
+            :key="opt.id"
+            type="button"
+            class="sidebar-race-btn"
+            :class="{ 'is-active': settings.race === opt.id }"
+            :aria-pressed="settings.race === opt.id"
+            @click="setRace(opt.id)"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
       </div>
 
       <nav class="sidebar-nav" aria-label="Разделы">

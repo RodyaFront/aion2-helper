@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Bookmark, MapPinned, RotateCcw, Trash2 } from '@lucide/vue'
 import { formatCountdown, formatInterval, parseHms, splitMinutes } from '../../shared/bosses'
-import { getVerteronBossCoord } from '../../shared/map/verteron'
+import { getBossCoord } from '../../shared/map/regions'
 import { useBossStore, type BossState } from '../../stores/bosses'
+import { useSettingsStore } from '../../stores/settings'
 import BossMapModal from './BossMapModal.vue'
 
 const props = defineProps<{
@@ -11,6 +12,7 @@ const props = defineProps<{
 }>()
 
 const store = useBossStore()
+const settings = useSettingsStore()
 
 const panel = ref<'none' | 'custom' | 'interval'>('none')
 const customH = ref('')
@@ -22,7 +24,7 @@ const intervalS = ref('')
 const imgBroken = ref(false)
 const showMap = ref(false)
 const imageSrc = computed(() => props.boss.image || '')
-const hasMapCoord = computed(() => getVerteronBossCoord(props.boss.id) != null)
+const hasMapCoord = computed(() => getBossCoord(settings.regionId, props.boss.id) != null)
 
 function fillIntervalFromBoss() {
   const parts = splitMinutes(props.boss.respawnMinutes)

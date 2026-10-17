@@ -27,7 +27,8 @@ const emit = defineEmits<{
 }>()
 
 const MIN_SCALE = 0.06
-const MAX_SCALE = 1.25
+/** Camera zoom: 1 = 1 map px per screen px on 8192 world. Tiles top out at z3. */
+const MAX_SCALE = 3
 /** Screen-px radius: markers closer than this count as one stack. */
 const STACK_SCREEN_PX = 40
 /** Vertical peek for the layer under the top chip (screen px only). */

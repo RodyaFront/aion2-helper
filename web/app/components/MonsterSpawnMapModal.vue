@@ -2,28 +2,33 @@
 import { SameMobPortraitCluster } from '../../shared/map/cluster'
 import { createMonsterSpawnScene } from '../../shared/items/catalog'
 import { gradeClass } from '../../shared/items/grade'
-import type { VerteronMob } from '../../shared/items/types'
+import type { RegionMob } from '../../shared/items/types'
 import type { IMapMarker } from '../../shared/map/types'
+import { regionLabelEn } from '../../shared/map/regions'
+import { useSettingsStore } from '../../stores/settings'
 import GameMapModal from './GameMapModal.vue'
 import ItemIcon from './ItemIcon.vue'
 import MonsterLootModal from './MonsterLootModal.vue'
 
 const props = defineProps<{
-  mob: VerteronMob
+  mob: RegionMob
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
+const settings = useSettingsStore()
+const regionId = computed(() => settings.regionId)
 
 const cluster = new SameMobPortraitCluster(36)
 const showLoot = ref(false)
 const clusterCount = ref<number | null>(null)
 
-const scene = computed(() => createMonsterSpawnScene(props.mob))
+const scene = computed(() => createMonsterSpawnScene(props.mob, regionId.value))
 
 const totalMarkers = computed(() => props.mob.spawnCount || scene.value.markers.length)
 const visibleCount = computed(() => scene.value.markers.length)
 
 const namePrimary = computed(() => props.mob.nameRu || props.mob.nameEn)
+const mapDescription = computed(() => `${regionLabelEn(regionId.value)} · координаты спауна`)
 
 watch(open, (isOpen) => {
   if (!isOpen) {
@@ -43,7 +48,7 @@ function onSelectMarker(marker: IMapMarker) {
   <GameMapModal
     v-model:open="open"
     :title="namePrimary"
-    description="Verteron · координаты спауна"
+    :description="mapDescription"
     :scene="scene"
     :cluster-strategy="cluster"
     @select-marker="onSelectMarker"

@@ -1,6 +1,7 @@
 import { watch } from 'vue'
 import { notifyNative } from '../../shared/notify'
 import { useBossStore } from '../../stores/bosses'
+import { useFavoritesStore } from '../../stores/favorites'
 import { useRiftStore } from '../../stores/rift'
 import { useSettingsStore } from '../../stores/settings'
 import { useAlertSound } from '../composables/useAlertSound'
@@ -10,6 +11,7 @@ export default defineNuxtPlugin(() => {
   const store = useBossStore()
   const rift = useRiftStore()
   const settings = useSettingsStore()
+  const favorites = useFavoritesStore()
   const { unlockAudio, playBossWarn, playRiftWarn, playRiftAlert, startAlarmLoop, stopAlarmLoop } = useAlertSound()
   const { speakAlert, ensureVoices } = useSpeechAlert()
 
@@ -81,9 +83,19 @@ export default defineNuxtPlugin(() => {
 
   let timer: ReturnType<typeof setInterval> | undefined
 
+  watch(
+    () => settings.regionId,
+    (regionId) => {
+      if (!store.hydrated) return
+      store.setRegion(regionId)
+    },
+  )
+
   void (async () => {
     await settings.hydrate()
+    await favorites.hydrate()
     await store.hydrate()
+    store.setRegion(settings.regionId)
     store.query = ''
     rift.tick()
     timer = setInterval(() => {
@@ -95,6 +107,7 @@ export default defineNuxtPlugin(() => {
   const flush = () => {
     if (store.hydrated) store.persist()
     if (settings.hydrated) settings.persist()
+    if (favorites.hydrated) favorites.persist()
   }
   window.addEventListener('pagehide', flush)
   window.addEventListener('beforeunload', flush)

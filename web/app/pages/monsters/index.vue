@@ -1,20 +1,25 @@
 <script setup lang="ts">
-import { MapPin, RotateCcw } from '@lucide/vue'
+import { Bookmark, MapPin, RotateCcw } from '@lucide/vue'
 import {
   ensureItemDropIndex,
-  listVerteronMobs,
+  listRegionMobs,
   normalizeSearch,
 } from '../../../shared/items/catalog'
 import { gradeClass, normalizeItemGrade } from '../../../shared/items/grade'
-import type { VerteronMob } from '../../../shared/items/types'
+import type { RegionMob } from '../../../shared/items/types'
 import ItemIcon from '../../components/ItemIcon.vue'
 import MonsterSpawnMapModal from '../../components/MonsterSpawnMapModal.vue'
 import AppFilterSelect from '../../components/ui/AppFilterSelect.vue'
 import AppSearchInput from '../../components/ui/AppSearchInput.vue'
 import AppVirtualList from '../../components/ui/AppVirtualList.vue'
+import { useFavoritesStore } from '../../../stores/favorites'
+import { useSettingsStore } from '../../../stores/settings'
 
 const route = useRoute()
 const router = useRouter()
+const favorites = useFavoritesStore()
+const settings = useSettingsStore()
+const regionId = computed(() => settings.regionId)
 
 const query = ref('')
 const race = ref('all')
@@ -22,10 +27,11 @@ const creature = ref('all')
 const grade = ref('all')
 const level = ref('all')
 const onlyWithSpawns = ref(false)
+const onlyFavorites = ref(false)
 const sort = ref('name')
 const status = ref<'loading' | 'ready' | 'error'>('loading')
-const mobs = shallowRef<VerteronMob[]>([])
-const mapMob = ref<VerteronMob | null>(null)
+const mobs = shallowRef<RegionMob[]>([])
+const mapMob = ref<RegionMob | null>(null)
 const showMap = ref(false)
 const searchRef = ref<{ focus: () => void } | null>(null)
 const listRef = ref<{ scrollToIndex: (i: number) => void } | null>(null)
@@ -90,6 +96,7 @@ function readQuery() {
   grade.value = typeof q.grade === 'string' ? q.grade : 'all'
   level.value = levelOptions.some((o) => o.value === q.lvl) ? String(q.lvl) : 'all'
   onlyWithSpawns.value = q.points === '1'
+  onlyFavorites.value = q.fav === '1'
   const rawSort = typeof q.sort === 'string' ? q.sort : 'name'
   sort.value = sortOptions.some((o) => o.value === rawSort) ? rawSort : 'name'
   nextTick(() => {
@@ -106,6 +113,7 @@ function writeQuery() {
   if (grade.value !== 'all') next.grade = grade.value
   if (level.value !== 'all') next.lvl = level.value
   if (onlyWithSpawns.value) next.points = '1'
+  if (onlyFavorites.value) next.fav = '1'
   if (sort.value !== 'name') next.sort = sort.value
   const cur = route.query
   const same
@@ -115,6 +123,7 @@ function writeQuery() {
       && String(cur.grade || '') === String(next.grade || '')
       && String(cur.lvl || '') === String(next.lvl || '')
       && String(cur.points || '') === String(next.points || '')
+      && String(cur.fav || '') === String(next.fav || '')
       && String(cur.sort || '') === String(next.sort || '')
   if (same) return
   router.replace({ query: next })
@@ -163,6 +172,10 @@ const filtered = computed(() => {
   }
   if (level.value !== 'all') list = list.filter((mob) => levelBand(mob.level) === level.value)
   if (onlyWithSpawns.value) list = list.filter((mob) => mob.spawnCount > 0)
+  if (onlyFavorites.value) {
+    const ids = favorites.mobIdSet
+    list = list.filter((mob) => ids.has(mob.mobId))
+  }
 
   const sorted = [...list]
   sorted.sort((a, b) => {
@@ -181,6 +194,10 @@ const filtered = computed(() => {
 
 const spawnCount = computed(() => mobs.value.filter((mob) => mob.spawnCount > 0).length)
 
+const favoriteCount = computed(
+  () => mobs.value.filter((mob) => favorites.mobIdSet.has(mob.mobId)).length,
+)
+
 const hasActiveFilters = computed(() =>
   Boolean(
     query.value.trim()
@@ -189,11 +206,12 @@ const hasActiveFilters = computed(() =>
     || grade.value !== 'all'
     || level.value !== 'all'
     || onlyWithSpawns.value
+    || onlyFavorites.value
     || sort.value !== 'name',
   ),
 )
 
-function openMap(mob: VerteronMob) {
+function openMap(mob: RegionMob) {
   if (mob.spawnCount <= 0) return
   mapMob.value = mob
   showMap.value = true
@@ -206,6 +224,7 @@ function resetFilters() {
   grade.value = 'all'
   level.value = 'all'
   onlyWithSpawns.value = false
+  onlyFavorites.value = false
   sort.value = 'name'
   activeIndex.value = -1
   listRef.value?.scrollToIndex(0)
@@ -244,14 +263,14 @@ function onListKeydown(e: KeyboardEvent) {
   }
 }
 
-function metaLine(mob: VerteronMob): string {
+function metaLine(mob: RegionMob): string {
   return [mob.creatureName, raceLabel(mob.race)].filter((bit) => bit && bit !== 'Без расы').join(' · ') || '—'
 }
 
 watch(() => route.query, () => readQuery())
 
 watch(
-  [query, race, creature, grade, level, onlyWithSpawns, sort],
+  [query, race, creature, grade, level, onlyWithSpawns, onlyFavorites, sort],
   () => {
     writeQuery()
     activeIndex.value = -1
@@ -262,16 +281,28 @@ watch(filtered, () => {
   if (activeIndex.value >= filtered.value.length) activeIndex.value = filtered.value.length - 1
 })
 
+async function loadMobs() {
+  status.value = 'loading'
+  const index = await ensureItemDropIndex(regionId.value)
+  if (!index) {
+    status.value = 'error'
+    mobs.value = []
+    return
+  }
+  mobs.value = listRegionMobs(regionId.value)
+  status.value = 'ready'
+}
+
+watch(regionId, () => {
+  showMap.value = false
+  mapMob.value = null
+  void loadMobs()
+})
+
 onMounted(async () => {
   readQuery()
   window.addEventListener('keydown', onSlashFocus)
-  const index = await ensureItemDropIndex()
-  if (!index) {
-    status.value = 'error'
-    return
-  }
-  mobs.value = listVerteronMobs()
-  status.value = 'ready'
+  await loadMobs()
 })
 
 onBeforeUnmount(() => {
@@ -308,6 +339,17 @@ onBeforeUnmount(() => {
                 >
                 С координатами
                 <span class="items-opt-count">{{ spawnCount }}</span>
+              </label>
+              <label
+                class="items-opt"
+                title="Показать только избранные"
+              >
+                <input
+                  v-model="onlyFavorites"
+                  type="checkbox"
+                >
+                Избранные
+                <span class="items-opt-count">{{ favoriteCount }}</span>
               </label>
               <button
                 v-if="hasActiveFilters"
@@ -417,7 +459,7 @@ onBeforeUnmount(() => {
               class="items-virtual"
               :items="filtered"
               :item-height="ROW_HEIGHT"
-              :get-key="(mob) => (mob as VerteronMob).mobId"
+              :get-key="(mob) => (mob as RegionMob).mobId"
             >
               <template #default="{ item, index }">
                 <article
@@ -462,6 +504,21 @@ onBeforeUnmount(() => {
                   <div class="items-col-actions">
                     <button
                       type="button"
+                      class="fav-btn"
+                      :class="{ 'is-on': favorites.mobIdSet.has(item.mobId) }"
+                      :aria-pressed="favorites.mobIdSet.has(item.mobId)"
+                      :aria-label="favorites.mobIdSet.has(item.mobId) ? 'Убрать из избранного' : 'В избранное'"
+                      :title="favorites.mobIdSet.has(item.mobId) ? 'Убрать из избранного' : 'В избранное'"
+                      @click.stop="favorites.toggleMob(item.mobId)"
+                    >
+                      <Bookmark
+                        class="ui-icon"
+                        aria-hidden="true"
+                        :fill="favorites.mobIdSet.has(item.mobId) ? 'currentColor' : 'none'"
+                      />
+                    </button>
+                    <button
+                      type="button"
                       class="btn btn-sm"
                       :disabled="item.spawnCount <= 0"
                       title="Карта спауна"
@@ -483,7 +540,12 @@ onBeforeUnmount(() => {
             v-else
             class="empty-state"
           >
-            Ничего не найдено.
+            <template v-if="onlyFavorites && favoriteCount === 0">
+              Нет избранных. Нажми закладку в строке.
+            </template>
+            <template v-else>
+              Ничего не найдено.
+            </template>
             <button
               v-if="hasActiveFilters"
               type="button"

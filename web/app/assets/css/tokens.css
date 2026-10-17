@@ -44,21 +44,23 @@
   --tracking-tight: -0.02em;
   --tracking-label: 0.08em;
 
-  /* —— Surfaces (keyed to rift plate #111018) —— */
-  --color-bg: #111018;
-  --color-bg-deep: #111018;
-  --color-bg-top: #16141f;
-  --color-bg-elev: #1c1a26;
-  --color-bg-card: #191722;
-  --color-bg-card-hover: #201e2c;
-  --color-bg-art: #0d0c12;
-  --color-bg-fallback-a: #2a2836;
-  --color-bg-fallback-b: #16141f;
-  --color-bg-toast: #1e1c28;
-  --color-line: #2e2c3a;
-  --color-line-soft: #24222e;
-  --color-line-toast: #3c3a4a;
-  --color-scrim: rgba(10, 9, 14, 0.8);
+  /* —— Surfaces (defaults = Elyos; overridden by [data-race]) ——
+     Race accents match Aion 2 brand cues (KINA data-theme + official badge tints):
+     Elyos sky cyan #5cc8ff · Asmodian violet #b58aff. No accent glow. */
+  --color-bg: #0e1218;
+  --color-bg-deep: #0e1218;
+  --color-bg-top: #121820;
+  --color-bg-elev: #182028;
+  --color-bg-card: #151c24;
+  --color-bg-card-hover: #1c2530;
+  --color-bg-art: #0a0e14;
+  --color-bg-fallback-a: #243040;
+  --color-bg-fallback-b: #121820;
+  --color-bg-toast: #1a222c;
+  --color-line: #2a3644;
+  --color-line-soft: #1e2834;
+  --color-line-toast: #3a4858;
+  --color-scrim: rgba(6, 10, 14, 0.8);
   --color-wash: rgba(255, 255, 255, 0.03);
   --color-wash-strong: rgba(255, 255, 255, 0.05);
   --color-ghost-hover: rgba(255, 255, 255, 0.04);
@@ -81,13 +83,13 @@
   --grade-heroic: #ff8a2b;
   --grade-special: #2ec4b6;
 
-  /* —— Semantic status (primary cooled for #111018 plate) —— */
-  --color-active: #3a8f88;
-  --color-active-bright: #3a8f88;
-  --color-active-soft: rgba(58, 143, 136, 0.14);
-  --color-active-ink: #031211;
-  --color-active-text: #84c8bf;
-  --color-active-line: #2a6560;
+  /* —— Semantic status (defaults = Elyos sky cyan; overridden by [data-race]) —— */
+  --color-active: #5cc8ff;
+  --color-active-bright: #5cc8ff;
+  --color-active-soft: rgba(92, 200, 255, 0.14);
+  --color-active-ink: #041018;
+  --color-active-text: #a7e7ff;
+  --color-active-line: #3a8ab8;
 
   --color-urgent: #e08a45;
   --color-urgent-soft: rgba(224, 138, 69, 0.12);
@@ -129,10 +131,10 @@
   --z-tooltip: 100;
 
   /* —— Interaction —— */
-  --color-btn-primary-hover: #449a93;
-  --color-btn-primary-active: #2d736d;
-  --color-btn-default-hover-border: #3c3a4a;
-  --color-btn-default-active-bg: #16141f;
+  --color-btn-primary-hover: #73d4ff;
+  --color-btn-primary-active: #3a9fd0;
+  --color-btn-default-hover-border: #3a4858;
+  --color-btn-default-active-bg: #121820;
   --shadow-focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-active-line);
   --shadow-primary-hover: none;
   --press-offset: 1px;
@@ -168,4 +170,66 @@
   --font: var(--font-sans);
   --display: var(--font-display);
   --mono: var(--font-mono);
+}
+
+/* —— Race themes (surfaces + accent only; status ready/urgent/danger stay shared) ——
+   Accents from Aion 2 KINA [data-theme]: Elyos #5cc8ff, Asmodian #b58aff.
+   Flat fills only — no accent glow (see AI_VISUAL_CLICHES). */
+
+[data-race='elyos'] {
+  --color-bg: #0e1218;
+  --color-bg-deep: #0e1218;
+  --color-bg-top: #121820;
+  --color-bg-elev: #182028;
+  --color-bg-card: #151c24;
+  --color-bg-card-hover: #1c2530;
+  --color-bg-art: #0a0e14;
+  --color-bg-fallback-a: #243040;
+  --color-bg-fallback-b: #121820;
+  --color-bg-toast: #1a222c;
+  --color-line: #2a3644;
+  --color-line-soft: #1e2834;
+  --color-line-toast: #3a4858;
+  --color-scrim: rgba(6, 10, 14, 0.8);
+
+  --color-active: #5cc8ff;
+  --color-active-bright: #5cc8ff;
+  --color-active-soft: rgba(92, 200, 255, 0.14);
+  --color-active-ink: #041018;
+  --color-active-text: #a7e7ff;
+  --color-active-line: #3a8ab8;
+
+  --color-btn-primary-hover: #73d4ff;
+  --color-btn-primary-active: #3a9fd0;
+  --color-btn-default-hover-border: #3a4858;
+  --color-btn-default-active-bg: #121820;
+}
+
+[data-race='asmodian'] {
+  --color-bg: #100e16;
+  --color-bg-deep: #100e16;
+  --color-bg-top: #16121e;
+  --color-bg-elev: #1c1828;
+  --color-bg-card: #181422;
+  --color-bg-card-hover: #221c30;
+  --color-bg-art: #0c0a12;
+  --color-bg-fallback-a: #2a2438;
+  --color-bg-fallback-b: #16121e;
+  --color-bg-toast: #1e1830;
+  --color-line: #342e44;
+  --color-line-soft: #262232;
+  --color-line-toast: #463e58;
+  --color-scrim: rgba(8, 6, 12, 0.82);
+
+  --color-active: #b58aff;
+  --color-active-bright: #b58aff;
+  --color-active-soft: rgba(181, 138, 255, 0.14);
+  --color-active-ink: #100818;
+  --color-active-text: #e2ceff;
+  --color-active-line: #7a5ab0;
+
+  --color-btn-primary-hover: #c4a0ff;
+  --color-btn-primary-active: #8a68c8;
+  --color-btn-default-hover-border: #463e58;
+  --color-btn-default-active-bg: #16121e;
 }

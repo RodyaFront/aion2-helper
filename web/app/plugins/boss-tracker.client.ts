@@ -1,5 +1,6 @@
 import { watch } from 'vue'
 import { notifyNative } from '../../shared/notify'
+import { applyRaceDocumentTheme } from '../../shared/race'
 import { useBossStore } from '../../stores/bosses'
 import { useFavoritesStore } from '../../stores/favorites'
 import { useRiftStore } from '../../stores/rift'
@@ -90,6 +91,9 @@ export default defineNuxtPlugin(() => {
       store.setRegion(regionId)
     },
   )
+
+  // Default theme before async hydrate (elyos) so first paint is not unthemed.
+  applyRaceDocumentTheme(settings.race)
 
   void (async () => {
     await settings.hydrate()

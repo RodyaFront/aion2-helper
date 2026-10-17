@@ -43,7 +43,7 @@ function onSelectMarker(marker: IMapMarker) {
   <GameMapModal
     v-model:open="open"
     :title="namePrimary"
-    description="Verteron · точки спауна"
+    description="Verteron · координаты спауна"
     :scene="scene"
     :cluster-strategy="cluster"
     @select-marker="onSelectMarker"
@@ -83,7 +83,7 @@ function onSelectMarker(marker: IMapMarker) {
                 <template v-if="mob.level != null">
                   Ур. {{ mob.level }} ·
                 </template>
-                {{ totalMarkers }} точек
+                {{ totalMarkers }} координат
               </p>
             </div>
           </div>
@@ -95,11 +95,11 @@ function onSelectMarker(marker: IMapMarker) {
           </h3>
           <p class="map-data-stat">
             <strong>{{ visibleCount }}</strong>
-            <span>из {{ totalMarkers }} точек</span>
+            <span>из {{ totalMarkers }} координат</span>
           </p>
           <p class="map-data-hint">
             Пин — портрет моба. Клик открывает таблицу дропа.
-            Близкие точки схлопываются в ×N.
+            Близкие координаты схлопываются в ×N.
           </p>
         </section>
       </div>

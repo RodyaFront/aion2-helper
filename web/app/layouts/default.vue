@@ -70,5 +70,7 @@ function isNavActive(to: string) {
     >
       <SettingsPanel />
     </UiAppModal>
+
+    <AlertOverlay />
   </div>
 </template>

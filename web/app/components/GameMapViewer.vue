@@ -11,11 +11,14 @@ const props = withDefaults(defineProps<{
   /** Keep chips whose ×N (mob group size) is in [min, max]. */
   minMobCount?: number
   maxMobCount?: number
+  /** When false, every marker in the viewport is drawn (no 200-chip cap). */
+  capDomMarkers?: boolean
 }>(), {
   clusterStrategy: null,
   maxTileZ: 3,
   minMobCount: 1,
   maxMobCount: Number.POSITIVE_INFINITY,
+  capDomMarkers: true,
 })
 
 const emit = defineEmits<{
@@ -229,11 +232,11 @@ const culledCount = computed(() => culledMarkers.value.length)
 /** Cap DOM chips; keep highest-rate markers. */
 const visibleMarkers = computed((): IMapMarker[] => {
   const list = culledMarkers.value
-  if (list.length <= MAX_DOM_MARKERS) return list
+  if (!props.capDomMarkers || list.length <= MAX_DOM_MARKERS) return list
   return [...list].sort(compareMarkersTopFirst).slice(0, MAX_DOM_MARKERS)
 })
 
-const domCapped = computed(() => culledCount.value > MAX_DOM_MARKERS)
+const domCapped = computed(() => props.capDomMarkers && culledCount.value > MAX_DOM_MARKERS)
 
 const stageStyle = computed(() => ({
   width: `${WORLD.value}px`,
@@ -267,14 +270,14 @@ const stackState = computed(() => {
   let groupSeq = 0
 
   for (const seed of pool) {
-    if (assigned.has(seed.id)) continue
+    if (assigned.has(seed.id) || seed.kind === 'gather') continue
     const members = [seed]
     const used = new Set([seed.id])
     let changed = true
     while (changed) {
       changed = false
       for (const candidate of pool) {
-        if (used.has(candidate.id)) continue
+        if (used.has(candidate.id) || candidate.kind === 'gather') continue
         const cp = candidate.point
         if (members.some((m) => {
           const mp = m.point
@@ -413,7 +416,7 @@ function onMarkerEnter(marker: IMapMarker) {
   hoveredMarkerId.value = marker.id
   focusMarkerId.value = marker.id
   if (spiderOffsets.value.size > 0) return
-  // Gather chips use native title + ×N; no mob stack popover.
+  // Gather and portrait chips stay on their own point; no mob stack popover.
   if (marker.kind === 'gather' || marker.kind === 'portrait') return
   openStackPopover(marker)
 }
@@ -795,7 +798,7 @@ watch(
       >
         <div class="boss-map-stack-head">
           <p class="boss-map-stack-title">
-            В точке · {{ stackPopover.members.length }}
+            В координате · {{ stackPopover.members.length }}
           </p>
           <button
             v-if="spiderOffsets.size === 0"
@@ -837,7 +840,7 @@ watch(
       </div>
 
       <p v-if="scene.markers.length === 0" class="boss-map-empty">
-        {{ scene.emptyMessage || 'Нет точек на карте.' }}
+        {{ scene.emptyMessage || 'Нет координат на карте.' }}
       </p>
     </div>
 
@@ -856,7 +859,7 @@ watch(
           @click="goToFocusControl"
         >
           <Crosshair class="ui-icon" aria-hidden="true" />
-          {{ scene.focusLabel || (scene.focusPoint ? 'К меткам' : 'Все точки') }}
+          {{ scene.focusLabel || (scene.focusPoint ? 'К меткам' : 'Все координаты') }}
         </button>
       </div>
       <p class="boss-map-hint">

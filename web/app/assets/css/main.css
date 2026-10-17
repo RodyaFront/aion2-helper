@@ -1033,7 +1033,7 @@ img {
     minmax(10rem, 1.6fr)
     minmax(7rem, 0.9fr)
     2.75rem
-    5.5rem
+    8rem
     5.25rem;
   gap: var(--space-2);
   align-items: center;
@@ -1736,7 +1736,7 @@ img {
   position: fixed;
   right: var(--space-4);
   bottom: var(--space-4);
-  z-index: 50;
+  z-index: 80;
   display: grid;
   gap: var(--space-2);
   width: min(22rem, calc(100vw - var(--space-8)));
@@ -2026,7 +2026,7 @@ img {
   position: fixed;
   left: 50%;
   bottom: var(--space-4);
-  z-index: 60;
+  z-index: 90;
   transform: translateX(-50%);
   display: flex;
   align-items: center;

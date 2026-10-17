@@ -163,7 +163,7 @@ watch(open, (isOpen) => {
               </p>
               <p class="map-research-meta">
                 {{ item.dropSourceCount }} источников
-                · {{ item.verteronSpawnCount }} точек
+                · {{ item.verteronSpawnCount }} координат
               </p>
             </div>
           </div>
@@ -214,7 +214,7 @@ watch(open, (isOpen) => {
             Шанс дропа
           </h3>
           <p class="map-data-hint">
-            Показать точки в диапазоне
+            Показать координаты в диапазоне
           </p>
           <div class="map-rate-range">
             <label class="map-rate-field">
@@ -309,7 +309,7 @@ watch(open, (isOpen) => {
           </h3>
           <p class="map-data-stat">
             <strong>{{ visibleCount }}</strong>
-            <span>из {{ totalMarkers }} точек</span>
+            <span>из {{ totalMarkers }} координат</span>
           </p>
           <p class="map-data-hint">
             %: {{ filterBounds.minRate }}–{{ filterBounds.maxRate }}

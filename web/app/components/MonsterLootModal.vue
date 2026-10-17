@@ -88,9 +88,9 @@ function raceLabel(race: string | null | undefined): string | null {
 function pointsLabel(n: number): string {
   const mod10 = n % 10
   const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'точка'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'точки'
-  return 'точек'
+  if (mod10 === 1 && mod100 !== 11) return 'координата'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'координаты'
+  return 'координат'
 }
 </script>
 

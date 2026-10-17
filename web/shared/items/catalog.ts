@@ -563,10 +563,10 @@ export function createItemDropMapScene(
     markers,
     // No focusPoint: camera fits all drop markers (not an arbitrary first spawn).
     focusPoint: null,
-    emptyMessage: 'Нет точек дропа в выбранном диапазоне.',
-    focusLabel: 'Все точки',
+    emptyMessage: 'Нет координат дропа в выбранном диапазоне.',
+    focusLabel: 'Все координаты',
     hintExtra: markers.length
-      ? `${markers.length} точек · клик по % — карточка моба`
+      ? `${markers.length} координат · клик по % — карточка моба`
       : undefined,
   })
 }
@@ -631,10 +631,10 @@ export function createMonsterSpawnScene(mob: VerteronMob): MapScene {
     map: VERTERON_MAP_DEFINITION,
     markers,
     focusPoint: null,
-    emptyMessage: 'Нет точек спауна на карте Verteron.',
-    focusLabel: 'Все точки',
+    emptyMessage: 'Нет координат спауна на карте Verteron.',
+    focusLabel: 'Все координаты',
     hintExtra: markers.length
-      ? `${markers.length} точек · клик по портрету — дроп`
+      ? `${markers.length} координат · клик по портрету — дроп`
       : undefined,
   })
 }
@@ -648,10 +648,10 @@ export function createItemGatherMapScene(item: ItemDef): MapScene {
     map: VERTERON_MAP_DEFINITION,
     markers,
     focusPoint: null,
-    emptyMessage: 'Нет точек сбора на карте Verteron.',
-    focusLabel: 'Все точки',
+    emptyMessage: 'Нет координат сбора на карте Verteron.',
+    focusLabel: 'Все координаты',
     hintExtra: markers.length
-      ? `${markers.length} точек сбора`
+      ? `${markers.length} координат сбора`
       : undefined,
   })
 }

@@ -66,7 +66,7 @@ const sortOptions = [
   { value: 'name', label: 'Имя' },
   { value: 'grade', label: 'Редкость' },
   { value: 'level', label: 'Уровень' },
-  { value: 'map', label: 'Сначала с точками' },
+  { value: 'map', label: 'Сначала с координатами' },
   { value: 'id', label: 'ID' },
 ]
 
@@ -292,15 +292,15 @@ onBeforeUnmount(() => {
               <label
                 class="items-opt"
                 :title="dropPointsCount
-                  ? 'Предметы с точками дропа или сбора на карте Verteron'
-                  : 'Пока нет предметов с точками на карте'"
+                  ? 'Предметы с координатами дропа или сбора на карте Verteron'
+                  : 'Пока нет предметов с координатами на карте'"
               >
                 <input
                   v-model="onlyWithDropPoints"
                   type="checkbox"
                   :disabled="dropPointsCount === 0"
                 >
-                С точками
+                С координатами
                 <span class="items-opt-count">{{ dropPointsCount }}</span>
               </label>
               <button

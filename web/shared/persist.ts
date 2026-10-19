@@ -1,7 +1,15 @@
 type PersistKey = 'bosses' | 'settings' | 'favorites'
 
+type BossTimerRow = { respawnAt?: number | null }
+
 type BossesPayload = {
-  bosses?: Array<{ respawnAt?: number | null }>
+  /** Legacy single-region list (pre race split). */
+  bosses?: BossTimerRow[]
+  /** Current multi-region shape. */
+  regions?: {
+    verteron?: BossTimerRow[]
+    altgard?: BossTimerRow[]
+  }
 }
 
 function localKey(key: PersistKey): string {
@@ -26,10 +34,19 @@ function readLocalStorage<T>(key: PersistKey): T | null {
   }
 }
 
+function listScore(list: BossTimerRow[] | null | undefined): number {
+  if (!Array.isArray(list) || !list.length) return -1
+  const active = list.filter((b) => b.respawnAt != null).length
+  return list.length * 1000 + active
+}
+
+/** Prefer the richer timer snapshot across legacy `bosses` and `regions.*`. */
 function bossesScore(data: BossesPayload | null): number {
-  if (!data?.bosses?.length) return -1
-  const active = data.bosses.filter((b) => b.respawnAt != null).length
-  return data.bosses.length * 1000 + active
+  if (!data) return -1
+  const legacy = listScore(data.bosses)
+  const verteron = listScore(data.regions?.verteron)
+  const altgard = listScore(data.regions?.altgard)
+  return Math.max(legacy, verteron, altgard)
 }
 
 function pickBosses(bridge: BossesPayload | null, local: BossesPayload | null): BossesPayload | null {

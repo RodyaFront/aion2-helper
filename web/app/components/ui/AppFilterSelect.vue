@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
   <div ref="rootRef" class="app-filter-select" :class="{ 'is-open': open }">
     <button
       type="button"
-      class="app-filter-trigger"
+      class="control control--elev app-filter-trigger"
       :aria-label="ariaLabel"
       :aria-expanded="open"
       aria-haspopup="listbox"
@@ -158,7 +158,7 @@ onBeforeUnmount(() => {
           v-for="(opt, idx) in filtered"
           :key="opt.value"
           role="option"
-          class="app-filter-option"
+          class="control control--ghost app-filter-option"
           :class="{
             'is-active': idx === activeIndex,
             'is-selected': opt.value === modelValue,

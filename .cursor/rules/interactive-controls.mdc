@@ -1,0 +1,48 @@
+---
+description: Shared hover / active / focus / tap contract for all clickable chrome
+globs: web/app/**/*.{vue,css},web/docs/DESIGN_SYSTEM.md
+alwaysApply: false
+---
+
+# Interactive controls — один контракт
+
+Все кликабельные элементы UI делят **один** hover / active (tap/press) / focus-visible. Не изобретать «жирный текст как ссылка» и не копировать локальные `:hover` fill.
+
+Канон: [`web/docs/DESIGN_SYSTEM.md`](web/docs/DESIGN_SYSTEM.md) §5 + слой `.btn` / `.control` в [`web/app/assets/css/main.css`](web/app/assets/css/main.css).
+
+## Два пути разметки
+
+| Случай | Классы |
+| --- | --- |
+| Обычная кнопка | `.btn` (+ `.btn-primary` / `.btn-danger` / `.btn-ready` / `.btn-kill-quiet` …) |
+| Тихая / вторичная | `.btn.btn-ghost` |
+| Компактная | добавить `.btn-sm` |
+| Только иконка | `.btn.btn-icon` (+ обычно `.btn-sm.btn-ghost`) |
+| Disclosure (`<details>`) | `<summary class="btn btn-sm btn-ghost …">` + шеврон |
+| Chrome без вида кнопки (nav, race, segmented, filter option, stack item) | `.control.control--ghost` (+ layout-класс) |
+| Chrome с elev-пластиной (filter trigger и аналоги) | `.control.control--elev` (+ layout-класс) |
+
+Кастомная оболочка — **только** layout/size/selected (`.is-active` / `.is-on`). Hover / active / focus брать из `.btn*` / `.control--*`, не дублировать своими правилами.
+
+## Контракт состояний
+
+1. **Rest** — явные `background`, `border-color`, `color` (токены).
+2. **Hover** — те же три свойства через токены. **Запрещено:** `filter: brightness()`, opacity-only hover.
+3. **Active / tap** — deeper fill + `transform: translateY(var(--press-offset))` на `.btn` / `.control` (не на строках).
+4. **Focus-visible** — `outline: none` + `box-shadow: var(--shadow-focus-ring)`.
+5. **Transitions** — background / border-color / color / box-shadow / transform (~0.1–0.15s).
+6. **Disabled** — `pointer-events: none` + пониженная opacity; без hover/press.
+
+## Surface rows (не контрол)
+
+Кликабельные **строки/карточки** (`.item-row`, `.loot-table-row`, `.boss-card`): класс `.surface-interactive` — только hover-wash (`--color-bg-card-hover`), **без** press translate. Дочерние кнопки внутри — обычный `.btn*`.
+
+## Cascade для вариантов
+
+Вариант (`.btn-primary`, `.btn-ghost`, `.control--ghost`, …) на `:hover` / `:active` должен **повторно задавать** background + border-color + color. Иначе выигрывает общий `.btn:hover` / `.control--elev:hover`.
+
+Selected (`.is-active` / `.is-on`) тоже явно перекрывает hover/active той же тройкой свойств.
+
+## Не кликабельное
+
+Статус-чипы, countdown, meta, декоративный арт — **не** получают cursor:pointer и hover fill. Состояние — бордер / бейдж, не заливка всей пластины (баннер разлома).

@@ -133,7 +133,7 @@ function toggle(kind: 'custom' | 'interval') {
 </script>
 
 <template>
-  <article class="boss-card" :class="cardClass">
+  <article class="boss-card surface-interactive" :class="cardClass">
     <div class="boss-card-top">
       <div class="boss-art-wrap">
         <img
@@ -162,7 +162,7 @@ function toggle(kind: 'custom' | 'interval') {
           <UiAppTooltip :content="boss.favorite ? 'Убрать из избранного' : 'В избранное'">
             <button
               type="button"
-              class="fav-btn"
+              class="btn btn-icon btn-sm btn-ghost fav-btn"
               :class="{ 'is-on': boss.favorite }"
               :aria-pressed="boss.favorite"
               :aria-label="boss.favorite ? 'Убрать из избранного' : 'В избранное'"

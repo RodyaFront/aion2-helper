@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
                 aria-label="Поиск предметов"
                 :debounce-ms="120"
               />
-              <label class="items-opt">
+              <label class="control control--elev items-opt">
                 <input
                   v-model="hideCosmetics"
                   type="checkbox"
@@ -333,7 +333,7 @@ onBeforeUnmount(() => {
                 Без косметики
               </label>
               <label
-                class="items-opt"
+                class="control control--elev items-opt"
                 :title="dropPointsCount
                   ? 'Предметы с координатами дропа или сбора на карте Verteron'
                   : 'Пока нет предметов с координатами на карте'"
@@ -347,7 +347,7 @@ onBeforeUnmount(() => {
                 <span class="items-opt-count">{{ dropPointsCount }}</span>
               </label>
               <label
-                class="items-opt"
+                class="control control--elev items-opt"
                 title="Показать только избранные"
               >
                 <input
@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
               <button
                 v-if="hasActiveFilters"
                 type="button"
-                class="items-opt is-btn"
+                class="items-opt is-btn control control--ghost"
                 title="Сбросить фильтры"
                 @click="resetFilters"
               >
@@ -468,7 +468,7 @@ onBeforeUnmount(() => {
             >
               <template #default="{ item, index }">
                 <article
-                  class="item-row"
+                  class="item-row surface-interactive"
                   :class="{
                     'is-active': index === activeIndex,
                     'has-map': itemHasRegionMap(item),
@@ -510,7 +510,7 @@ onBeforeUnmount(() => {
                   <div class="items-col-actions">
                     <button
                       type="button"
-                      class="fav-btn"
+                      class="btn btn-icon btn-sm btn-ghost fav-btn"
                       :class="{ 'is-on': favorites.itemIdSet.has(item.itemId) }"
                       :aria-pressed="favorites.itemIdSet.has(item.itemId)"
                       :aria-label="favorites.itemIdSet.has(item.itemId) ? 'Убрать из избранного' : 'В избранное'"

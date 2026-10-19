@@ -156,7 +156,7 @@ function stopPreview() {
         >
       </div>
 
-      <label class="settings-switch" for="boss-sound-enabled">
+      <label class="control control--elev settings-switch" for="boss-sound-enabled">
         <span class="settings-switch-copy">
           <span class="settings-switch-title">Звуковые оповещения боссов</span>
           <span class="settings-switch-desc">Предупреждения и будильник респауна</span>
@@ -169,7 +169,7 @@ function stopPreview() {
         >
       </label>
 
-      <label class="settings-switch" for="rift-sound-enabled">
+      <label class="control control--elev settings-switch" for="rift-sound-enabled">
         <span class="settings-switch-copy">
           <span class="settings-switch-title">Звуковые оповещения разлома</span>
           <span class="settings-switch-desc">Предупреждения и звук открытия портала</span>
@@ -182,7 +182,7 @@ function stopPreview() {
         >
       </label>
 
-      <label class="settings-switch" for="tts-enabled">
+      <label class="control control--elev settings-switch" for="tts-enabled">
         <span class="settings-switch-copy">
           <span class="settings-switch-title">Голосовые оповещения</span>
           <span class="settings-switch-desc">Произносит имя босса и фразу при каждом toast</span>
@@ -219,7 +219,7 @@ function stopPreview() {
             v-for="(meta, tier) in BOSS_TIER_META"
             :key="tier"
             type="button"
-            class="settings-test-btn"
+            class="btn settings-test-btn"
             @click="previewBossTier(tier)"
           >
             <span class="settings-test-btn-label">{{ meta.label }}</span>
@@ -227,7 +227,7 @@ function stopPreview() {
           </button>
           <button
             type="button"
-            class="settings-test-btn settings-test-btn-accent"
+            class="btn settings-test-btn settings-test-btn-accent"
             @click="previewBossReady"
           >
             <span class="settings-test-btn-label">Респаун</span>
@@ -243,7 +243,7 @@ function stopPreview() {
         <div class="settings-test-grid">
           <button
             type="button"
-            class="settings-test-btn"
+            class="btn settings-test-btn"
             @click="previewRiftWarn(15)"
           >
             <span class="settings-test-btn-label">15 мин</span>
@@ -251,7 +251,7 @@ function stopPreview() {
           </button>
           <button
             type="button"
-            class="settings-test-btn"
+            class="btn settings-test-btn"
             @click="previewRiftWarn(10)"
           >
             <span class="settings-test-btn-label">10 мин</span>
@@ -259,7 +259,7 @@ function stopPreview() {
           </button>
           <button
             type="button"
-            class="settings-test-btn settings-test-btn-accent"
+            class="btn settings-test-btn settings-test-btn-accent"
             @click="previewRiftOpen"
           >
             <span class="settings-test-btn-label">Открыт</span>

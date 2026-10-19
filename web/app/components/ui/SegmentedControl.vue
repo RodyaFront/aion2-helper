@@ -80,7 +80,7 @@ function onKeydown(e: KeyboardEvent) {
       v-for="opt in options"
       :key="opt.id"
       type="button"
-      class="segmented-item"
+      class="control control--ghost segmented-item"
       :class="{ 'is-active': model === opt.id }"
       role="radio"
       :aria-checked="model === opt.id"

@@ -186,7 +186,7 @@ watch(open, (isOpen) => {
             >
               <button
                 type="button"
-                class="map-level-toggle-info"
+                class="btn btn-icon btn-sm btn-ghost map-level-toggle-info"
                 aria-label="Что значит after 45lvl"
                 :aria-expanded="infoTipOpen"
               >
@@ -198,7 +198,7 @@ watch(open, (isOpen) => {
                   и получают
                   <button
                     type="button"
-                    class="app-tooltip-link"
+                    class="control control--ghost app-tooltip-link"
                     @click="openSharedLootModal"
                   >shared лут</button>.
                 </p>

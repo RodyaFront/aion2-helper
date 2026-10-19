@@ -824,7 +824,7 @@ watch(
           <li
             v-for="m in stackPopover.members"
             :key="m.id"
-            class="boss-map-stack-item"
+            class="control control--ghost boss-map-stack-item"
             :class="{ 'is-active': focusMarkerId === m.id }"
             :title="markerModel(m).title || ''"
             @pointerenter="selectStackMember(m)"

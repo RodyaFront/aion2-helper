@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
     <button
       v-if="local"
       type="button"
-      class="app-search-clear"
+      class="btn btn-icon btn-sm btn-ghost app-search-clear"
       aria-label="Очистить поиск"
       @click="clear"
     >

@@ -88,3 +88,16 @@ export function formatRiftClock(ms: number): string {
     hour12: false,
   })
 }
+
+/** Local wall-clock with explicit TZ marker for UI / toasts. */
+export function formatRiftClockLocal(ms: number): string {
+  return `${formatRiftClock(ms)} лок.`
+}
+
+export type RiftBannerMode = 'portal' | 'in-event' | 'idle'
+
+export function getRiftBannerMode(snap: RiftSnapshot, now = Date.now()): RiftBannerMode {
+  if (snap.phase === 'open') return 'portal'
+  if (snap.eventEndsAt != null && now < snap.eventEndsAt) return 'in-event'
+  return 'idle'
+}

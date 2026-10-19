@@ -65,7 +65,7 @@ watch(
             v-for="opt in raceOptions"
             :key="opt.id"
             type="button"
-            class="sidebar-race-btn"
+            class="control control--ghost sidebar-race-btn"
             :class="{ 'is-active': settings.race === opt.id }"
             :aria-pressed="settings.race === opt.id"
             :aria-label="opt.label"
@@ -91,7 +91,7 @@ watch(
           v-for="item in nav"
           :key="item.to"
           :to="item.to"
-          class="sidebar-nav-link"
+          class="control control--ghost sidebar-nav-link"
           :class="{ 'is-active': isNavActive(item.to) }"
         >
           <component :is="item.icon" class="ui-icon sidebar-nav-icon" aria-hidden="true" />
@@ -109,7 +109,7 @@ watch(
       <div class="sidebar-foot">
         <button
           type="button"
-          class="sidebar-util-btn"
+          class="control control--ghost sidebar-util-btn"
           aria-label="Настройки"
           @click="showSettings = true"
         >

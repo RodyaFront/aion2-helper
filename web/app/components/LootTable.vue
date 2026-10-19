@@ -134,7 +134,7 @@ const sortLabel = computed(() => (sortKey.value === 'chance' ? '%' : 'А–Я'))
           <button
             v-if="query"
             type="button"
-            class="loot-table-search-clear"
+            class="btn btn-icon btn-sm btn-ghost loot-table-search-clear"
             aria-label="Очистить поиск"
             @click="clearQuery"
           >
@@ -146,7 +146,7 @@ const sortLabel = computed(() => (sortKey.value === 'chance' ? '%' : 'А–Я'))
         >
           <button
             type="button"
-            class="loot-table-tool-btn"
+            class="btn btn-sm loot-table-tool-btn"
             :aria-label="sortKey === 'chance' ? 'Сортировка по проценту' : 'Сортировка по имени'"
             @click="cycleSort"
           >
@@ -157,7 +157,7 @@ const sortLabel = computed(() => (sortKey.value === 'chance' ? '%' : 'А–Я'))
         <UiAppTooltip content="Группировка по категории">
           <button
             type="button"
-            class="loot-table-tool-btn"
+            class="btn btn-sm loot-table-tool-btn"
             :class="{ 'is-active': groupByCategory }"
             aria-label="Группировка по категории"
             :aria-pressed="groupByCategory"
@@ -179,7 +179,7 @@ const sortLabel = computed(() => (sortKey.value === 'chance' ? '%' : 'А–Я'))
           <li
             v-for="d in group.items"
             :key="d.itemId"
-            class="loot-table-row"
+            class="loot-table-row surface-interactive"
           >
             <ItemIcon
               :src="d.iconUrl"

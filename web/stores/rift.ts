@@ -2,9 +2,12 @@ import { defineStore } from 'pinia'
 import { formatCountdown } from '../shared/bosses'
 import {
   formatRiftClock,
+  formatRiftClockLocal,
+  getRiftBannerMode,
   getRiftSnapshot,
   RIFT_WARN_MS,
   RIFT_WARN_THRESHOLDS_MS,
+  type RiftBannerMode,
   type RiftPhase,
 } from '../shared/rift'
 import { riftOpenSpeech, riftWarnSpeech, type SpeechPayload } from '../shared/speakLines'
@@ -52,9 +55,24 @@ export const useRiftStore = defineStore('rift', {
     nextOpenLabel(state): string {
       return formatRiftClock(state.nextOpensAt)
     },
+    nextOpenLabelLocal(state): string {
+      return formatRiftClockLocal(state.nextOpensAt)
+    },
     eventCountdown(state): string | null {
       if (state.eventEndsAt == null || state.now >= state.eventEndsAt) return null
       return formatCountdown((state.eventEndsAt - state.now) / 1000)
+    },
+    bannerMode(state): RiftBannerMode {
+      return getRiftBannerMode(
+        {
+          phase: state.phase,
+          windowStartAt: state.windowStartAt,
+          portalClosesAt: state.portalClosesAt,
+          nextOpensAt: state.nextOpensAt,
+          eventEndsAt: state.eventEndsAt,
+        },
+        state.now,
+      )
     },
     statusLabel(state): string {
       return state.phase === 'open' ? 'Портал открыт' : 'Портал закрыт'
@@ -153,7 +171,7 @@ export const useRiftStore = defineStore('rift', {
     alertWarn(thresholdMs: number = RIFT_WARN_MS) {
       const mins = Math.round(thresholdMs / 60000)
       const title = `Разлом через ${mins} мин`
-      const body = `Портал откроется в ${formatRiftClock(this.nextOpensAt)}.`
+      const body = `Портал откроется в ${formatRiftClockLocal(this.nextOpensAt)}.`
       this.toast = {
         id: `rift-warn-${mins}-${this.nextOpensAt}-${Date.now()}`,
         kind: 'warn',

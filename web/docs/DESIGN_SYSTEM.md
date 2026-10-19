@@ -108,20 +108,30 @@ Page title → `--text-2xl` + display. Card title → `--text-lg` + display. Cou
 
 ---
 
-## 5. Interaction states (buttons)
+## 5. Interaction states (clickable chrome)
 
-Cascade rule: variant hover/active must set **background, border-color, and color** explicitly. Never rely on `.btn:hover` alone for `.btn-primary` — same specificity lets the default hover wipe the green fill (bug seen as dark button + green outline text).
+**One contract** for every clickable control — `<button>`, icon toggles, nav links, segmented items, filter trigger/options, `<summary>` disclosures. Shared CSS layer: `.btn, .control` (transition, focus-visible ring, press). Tones: `.btn-ghost` ≡ `.control--ghost`, default `.btn` ≡ `.control--elev`.
 
-| Variant | Rest | Hover | Active (press) | Focus-visible |
+Prefer `.btn*` when the control looks like a button. Use `.control` + tone when layout is chrome (sidebar nav, race picker, segmented, list options). Layout-only overrides allowed — do not re-declare hover fills.
+
+Agent rule: `.cursor/rules/interactive-controls.mdc`.
+
+Cascade rule: variant hover/active must set **background, border-color, and color** explicitly. Never rely on `.btn:hover` alone for `.btn-primary` — same specificity lets the default hover wipe the fill.
+
+| Variant | Rest | Hover | Active (press / tap) | Focus-visible |
 | --- | --- | --- | --- | --- |
-| Default `.btn` | elev + line | card-hover + brighter line | deeper press + `translateY` | `--shadow-focus-ring` |
-| `.btn-primary` | green gradient + ink | `--color-btn-primary-hover` + glow | `--color-btn-primary-active` | focus ring + glow |
-| `.btn-ghost` | transparent + muted | active-soft + active-text | wash-strong | focus ring |
+| Default `.btn` / `.control--elev` | elev + line | card-hover + brighter line | deeper fill + `translateY(--press-offset)` | `--shadow-focus-ring` |
+| `.btn-primary` | flat active fill + ink | `--color-btn-primary-hover` | `--color-btn-primary-active` | focus ring |
+| `.btn-ghost` / `.control--ghost` | transparent + muted | active-soft + active-text | wash-strong + press | focus ring |
 | `.btn-danger` | danger-soft | danger-soft-hover | danger-soft-active | focus ring |
-| `.filter-btn` | muted | wash | wash-strong | — |
-| `.filter-btn.is-active` | active-soft (wins over hover) | same | same | — |
+| `.btn-ready` | ready fill | ready-hover | ready + press | focus ring |
+| Selected `.is-active` | active-soft (wins over hover) | same | same | focus ring |
 
-Tokens: `--color-btn-primary-hover`, `--color-btn-primary-active`, `--press-offset`, `--shadow-focus-ring`, `--shadow-primary-hover`.
+**Surface rows** (`.surface-interactive` on `.boss-card` / `.item-row` / `.loot-table-row`): hover wash only (`--color-bg-card-hover`), **no** press translate on the row/card. Child controls still use `.btn*`.
+
+Forbidden as the only hover signal: `filter: brightness()`, opacity-only, underline-only text.
+
+Tokens: `--color-btn-primary-hover`, `--color-btn-primary-active`, `--press-offset`, `--shadow-focus-ring`.
 
 ## 6. Motion
 

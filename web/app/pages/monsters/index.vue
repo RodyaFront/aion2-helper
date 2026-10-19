@@ -327,7 +327,7 @@ onBeforeUnmount(() => {
                 :debounce-ms="120"
               />
               <label
-                class="items-opt"
+                class="control control--elev items-opt"
                 :title="spawnCount
                   ? 'Монстры с координатами спауна на карте Verteron'
                   : 'Пока нет монстров с координатами на карте'"
@@ -341,7 +341,7 @@ onBeforeUnmount(() => {
                 <span class="items-opt-count">{{ spawnCount }}</span>
               </label>
               <label
-                class="items-opt"
+                class="control control--elev items-opt"
                 title="Показать только избранные"
               >
                 <input
@@ -354,7 +354,7 @@ onBeforeUnmount(() => {
               <button
                 v-if="hasActiveFilters"
                 type="button"
-                class="items-opt is-btn"
+                class="items-opt is-btn control control--ghost"
                 title="Сбросить фильтры"
                 @click="resetFilters"
               >
@@ -463,7 +463,7 @@ onBeforeUnmount(() => {
             >
               <template #default="{ item, index }">
                 <article
-                  class="item-row"
+                  class="item-row surface-interactive"
                   :class="{
                     'is-active': index === activeIndex,
                     'has-map': item.spawnCount > 0,
@@ -504,7 +504,7 @@ onBeforeUnmount(() => {
                   <div class="items-col-actions">
                     <button
                       type="button"
-                      class="fav-btn"
+                      class="btn btn-icon btn-sm btn-ghost fav-btn"
                       :class="{ 'is-on': favorites.mobIdSet.has(item.mobId) }"
                       :aria-pressed="favorites.mobIdSet.has(item.mobId)"
                       :aria-label="favorites.mobIdSet.has(item.mobId) ? 'Убрать из избранного' : 'В избранное'"

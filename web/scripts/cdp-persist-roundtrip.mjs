@@ -37,7 +37,7 @@ const step = process.argv[2] || 'set'
 if (step === 'set') {
   const { ws, evaluate } = await connect()
   const out = await evaluate(`(async () => {
-    const btn = [...document.querySelectorAll('button')].find(b => /Только что убит/i.test(b.textContent || ''))
+    const btn = [...document.querySelectorAll('button')].find(b => /^(Убит|Убит снова)$/i.test((b.textContent || '').trim()))
     if (!btn) return { err: 'no kill button' }
     btn.click()
     await new Promise(r => setTimeout(r, 500))

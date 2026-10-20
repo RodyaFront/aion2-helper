@@ -13,7 +13,7 @@ export default defineNuxtPlugin(() => {
   const rift = useRiftStore()
   const settings = useSettingsStore()
   const favorites = useFavoritesStore()
-  const { unlockAudio, playBossWarn, playRiftWarn, playRiftAlert, startAlarmLoop, stopAlarmLoop } = useAlertSound()
+  const { unlockAudio, playBossWarn, playRiftWarn, playRiftAlert } = useAlertSound()
   const { speakAlert, ensureVoices } = useSpeechAlert()
 
   if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
@@ -28,7 +28,7 @@ export default defineNuxtPlugin(() => {
   window.addEventListener('keydown', unlock, { once: true })
   ensureVoices()
 
-  /** Every new toast = Windows notify + SFX + TTS (ready: TTS once, alarm loop separate). */
+  /** Every new toast = Windows notify + one sound + voice (no looping alarm). */
   let lastBossToastIds = new Set<string>()
   watch(
     () => store.toasts.map((t) => `${t.id}:${t.kind}:${t.warnTier ?? ''}`).join('|'),
@@ -37,29 +37,12 @@ export default defineNuxtPlugin(() => {
         if (lastBossToastIds.has(toast.id)) continue
         notifyNative(toast.title, toast.body)
         if (toast.speech) speakAlert(toast.speech)
-        if (toast.kind === 'warn' && settings.bossSoundEnabled) {
-          void playBossWarn(toast.warnTier ?? 'ping')
-        }
+        if (!settings.bossSoundEnabled) continue
+        if (toast.kind === 'ready') void playBossWarn('alert')
+        else void playBossWarn(toast.warnTier ?? 'ping')
       }
       lastBossToastIds = new Set(store.toasts.map((t) => t.id))
     },
-  )
-
-  watch(
-    () => store.isAlarming,
-    (alarming) => {
-      window.aionTracker?.setAlarming?.(alarming)
-    },
-    { immediate: true },
-  )
-
-  watch(
-    () => store.isAlarming && settings.bossSoundEnabled,
-    (play) => {
-      if (play) startAlarmLoop()
-      else stopAlarmLoop()
-    },
-    { immediate: true },
   )
 
   let lastRiftToastKey = ''
@@ -82,6 +65,21 @@ export default defineNuxtPlugin(() => {
 
   const offFocus = window.aionTracker?.onFocusApp?.(() => {})
 
+  const offBossKill = window.aionTracker?.onBossKill?.((payload) => {
+    if (!store.hydrated || !settings.hydrated) return
+    if (!settings.autoKillTrackEnabled) return
+    const def = store.ensureTrackedAndMarkKilled(payload.npcId, settings.regionId)
+    if (!def) return
+    notifyNative('Таймер', def.nameRu || def.name)
+  })
+
+  const offFieldSync = window.aionTracker?.onFieldSync?.((payload) => {
+    if (!store.hydrated || !settings.hydrated) return
+    if (!settings.autoKillTrackEnabled) return
+    if (!payload?.bosses?.length) return
+    store.offerFieldSync(payload.bosses, settings.regionId)
+  })
+
   let timer: ReturnType<typeof setInterval> | undefined
 
   watch(
@@ -101,6 +99,20 @@ export default defineNuxtPlugin(() => {
     await store.hydrate()
     store.setRegion(settings.regionId)
     store.query = ''
+    // Default-on: if user wants auto-timer (default true) and Npcap is there — start watcher.
+    // Do not wipe the preference on transient start failures.
+    if (settings.autoKillTrackEnabled && window.aionTracker?.ensureAutoKillTrack) {
+      const status = await window.aionTracker.ensureAutoKillTrack()
+      if (status.status === 'missing_npcap') {
+        // Driver missing — keep preference; banner shows install CTA.
+      }
+      else if (status.enabled) {
+        settings.setAutoKillTrackEnabled(true)
+      }
+    }
+    else if (settings.autoKillTrackEnabled && window.aionTracker?.setAutoKillTrack) {
+      await window.aionTracker.setAutoKillTrack(true)
+    }
     rift.tick()
     timer = setInterval(() => {
       store.tick()
@@ -119,8 +131,9 @@ export default defineNuxtPlugin(() => {
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {
       if (timer) clearInterval(timer)
-      stopAlarmLoop()
       offFocus?.()
+      offBossKill?.()
+      offFieldSync?.()
       window.removeEventListener('pagehide', flush)
       window.removeEventListener('beforeunload', flush)
     })

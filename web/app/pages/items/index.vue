@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
                 v-model="query"
                 class="items-search"
                 name="item-search"
-                placeholder="Поиск по имени (EN/RU), ID, категории…"
+                placeholder="Поиск по имени (на английском или русском), ID, категории..."
                 aria-label="Поиск предметов"
                 :debounce-ms="120"
               />
@@ -389,7 +389,7 @@ onBeforeUnmount(() => {
                 :options="categoryOptions"
                 label="Категория"
                 aria-label="Категория"
-                search-placeholder="Найти категорию…"
+                search-placeholder="Найти категорию..."
               />
               <AppFilterSelect
                 v-model="sort"
@@ -405,7 +405,7 @@ onBeforeUnmount(() => {
           <div class="section-bar">
             <p class="section-label">
               <template v-if="catalogStatus === 'loading'">
-                Загрузка каталога…
+                Загрузка каталога...
               </template>
               <template v-else-if="catalogStatus === 'error'">
                 Не удалось загрузить каталог
@@ -439,7 +439,7 @@ onBeforeUnmount(() => {
             v-else-if="catalogStatus === 'loading'"
             class="empty-state"
           >
-            Подтягиваем ~9k предметов…
+            Подтягиваем ~9k предметов...
           </div>
 
           <div
@@ -498,11 +498,11 @@ onBeforeUnmount(() => {
                     </p>
                   </div>
                   <div class="items-col-meta">
-                    <span>{{ item.itemType || '—' }}</span>
+                    <span>{{ item.itemType || '-' }}</span>
                     <span>{{ item.categoryName || item.category }}</span>
                   </div>
                   <div class="items-col-lvl">
-                    {{ item.itemLevel || item.levelReq || '—' }}
+                    {{ item.itemLevel || item.levelReq || '-' }}
                   </div>
                   <div class="items-col-id">
                     #{{ item.itemId }}

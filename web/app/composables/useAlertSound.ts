@@ -2,8 +2,6 @@ import type { BossWarnTier } from '../../shared/bosses'
 import { useSettingsStore } from '../../stores/settings'
 
 let ctx: AudioContext | null = null
-let alarmTimer: number | null = null
-let alarmStep = 0
 
 const SAMPLE_URLS: Record<BossWarnTier, string> = {
   ping: '/sounds/boss-ping.ogg',
@@ -135,23 +133,6 @@ function fallbackTier(tier: BossWarnTier) {
   }
 }
 
-/** Ready-state loop: short pattern with pitch step each repeat (anti-habituation). */
-function playReadyBurst() {
-  if (currentGain() <= 0) return
-  const audio = getCtx()
-  if (!audio) return
-  void audio.resume()
-  const now = audio.currentTime
-  const step = alarmStep % 4
-  alarmStep += 1
-  const base = 700 + step * 55
-  const pattern = [0, 0.13, 0.26]
-  pattern.forEach((offset, i) => {
-    const freq = base + i * 90
-    tone(audio, freq, now + offset, 0.14, 0.11 + step * 0.01, 'triangle')
-  })
-}
-
 export function useAlertSound() {
   function unlockAudio() {
     const audio = getCtx()
@@ -206,36 +187,11 @@ export function useAlertSound() {
     }
   }
 
-  function playAlarmBurst() {
-    playReadyBurst()
-  }
-
-  function startAlarmLoop() {
-    if (!import.meta.client) return
-    if (alarmTimer != null) return
-    alarmStep = 0
-    playAlarmBurst()
-    alarmTimer = window.setInterval(() => {
-      playAlarmBurst()
-    }, 1700)
-  }
-
-  function stopAlarmLoop() {
-    if (alarmTimer != null) {
-      window.clearInterval(alarmTimer)
-      alarmTimer = null
-    }
-    alarmStep = 0
-  }
-
   return {
     unlockAudio,
     playAlert,
     playBossWarn,
     playRiftWarn,
     playRiftAlert,
-    playAlarmBurst,
-    startAlarmLoop,
-    stopAlarmLoop,
   }
 }

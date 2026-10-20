@@ -24,7 +24,7 @@ const timerLabel = computed(() => {
 
 const timerValue = computed(() => {
   if (mode.value === 'portal') return rift.portalCountdown
-  if (mode.value === 'in-event') return rift.eventCountdown ?? '—'
+  if (mode.value === 'in-event') return rift.eventCountdown ?? '-'
   return rift.nextCountdown
 })
 

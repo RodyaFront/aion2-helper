@@ -236,7 +236,7 @@ watch(open, (isOpen) => {
               >
               <span class="map-rate-suffix">%</span>
             </label>
-            <span class="map-rate-sep" aria-hidden="true">—</span>
+            <span class="map-rate-sep" aria-hidden="true">-</span>
             <label class="map-rate-field">
               <span class="map-rate-label">До</span>
               <input
@@ -257,7 +257,7 @@ watch(open, (isOpen) => {
             class="btn btn-sm btn-ghost map-rate-reset"
             @click="resetRateRange"
           >
-            Сбросить 2–45%
+            Сбросить 2-45%
           </button>
         </section>
 
@@ -283,7 +283,7 @@ watch(open, (isOpen) => {
               >
               <span class="map-rate-suffix">×</span>
             </label>
-            <span class="map-rate-sep" aria-hidden="true">—</span>
+            <span class="map-rate-sep" aria-hidden="true">-</span>
             <label class="map-rate-field">
               <span class="map-rate-label">До</span>
               <input
@@ -317,8 +317,8 @@ watch(open, (isOpen) => {
             <span>из {{ totalMarkers }} координат</span>
           </p>
           <p class="map-data-hint">
-            %: {{ filterBounds.minRate }}–{{ filterBounds.maxRate }}
-            · ×N: {{ countBounds.minMobCount }}–{{ countBounds.maxMobCount }}
+            %: {{ filterBounds.minRate }}-{{ filterBounds.maxRate }}
+            · ×N: {{ countBounds.minMobCount }}-{{ countBounds.maxMobCount }}
           </p>
         </section>
       </div>

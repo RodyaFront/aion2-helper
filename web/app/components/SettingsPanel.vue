@@ -15,7 +15,7 @@ const DEMO_BOSS = 'Bloodfang Pnyn'
 
 const settings = useSettingsStore()
 const rift = useRiftStore()
-const { unlockAudio, playBossWarn, playAlarmBurst } = useAlertSound()
+const { unlockAudio, playBossWarn } = useAlertSound()
 const { speakAlert, stopSpeech, ensureVoices } = useSpeechAlert()
 
 type SettingsTab = 'params' | 'tests'
@@ -47,8 +47,8 @@ const ttsEnabled = computed({
 })
 
 const muteHint = computed(() => {
-  if (volume.value === 0) return 'Громкость 0% — звук и голос выключены. Windows-toast всё ещё может появиться.'
-  if (!ttsEnabled.value) return 'Голос выключен — тесты играют только звук и toast.'
+  if (volume.value === 0) return 'Громкость 0% - звук и голос выключены. Уведомление Windows всё ещё может появиться.'
+  if (!ttsEnabled.value) return 'Голос выключен - тесты играют только звук и уведомление.'
   return null
 })
 
@@ -96,8 +96,8 @@ function previewBossTier(tier: BossWarnTier) {
 function previewBossReady() {
   unlockAudio()
   ensureVoices()
-  notifyNative('Тест: будильник', 'Звук респауна босса')
-  if (settings.bossSoundEnabled) playAlarmBurst()
+  notifyNative('Тест: респаун', 'Босс готов - можно фармить')
+  if (settings.bossSoundEnabled) void playBossWarn('alert')
   speakAlert(bossReadySpeech(DEMO_BOSS))
 }
 
@@ -133,7 +133,7 @@ function stopPreview() {
           Звук и голос
         </h3>
         <p class="settings-section-desc">
-          Общая громкость для SFX и TTS. Имя босса — EN (Piper), фраза — RU (Piper).
+          Общая громкость для звука и голоса. Имя босса читается по-английски, фраза - по-русски.
         </p>
       </header>
 
@@ -159,7 +159,7 @@ function stopPreview() {
       <label class="control control--elev settings-switch" for="boss-sound-enabled">
         <span class="settings-switch-copy">
           <span class="settings-switch-title">Звуковые оповещения боссов</span>
-          <span class="settings-switch-desc">Предупреждения и будильник респауна</span>
+          <span class="settings-switch-desc">Предупреждения и один звук, когда босс готов</span>
         </span>
         <input
           id="boss-sound-enabled"
@@ -185,7 +185,7 @@ function stopPreview() {
       <label class="control control--elev settings-switch" for="tts-enabled">
         <span class="settings-switch-copy">
           <span class="settings-switch-title">Голосовые оповещения</span>
-          <span class="settings-switch-desc">Произносит имя босса и фразу при каждом toast</span>
+          <span class="settings-switch-desc">Произносит имя босса и фразу при каждом оповещении</span>
         </span>
         <input
           id="tts-enabled"
@@ -206,7 +206,7 @@ function stopPreview() {
           Проверка оповещений
         </h3>
         <p class="settings-section-desc">
-          Как в бою: Windows-toast + звук + Piper-озвучка (если голос включён).
+          Как в бою: уведомление Windows, звук и голос (если голос включён).
         </p>
       </header>
 
@@ -231,7 +231,7 @@ function stopPreview() {
             @click="previewBossReady"
           >
             <span class="settings-test-btn-label">Респаун</span>
-            <span class="settings-test-btn-hint">будильник + голос</span>
+            <span class="settings-test-btn-hint">звук + уведомление Windows</span>
           </button>
         </div>
       </div>

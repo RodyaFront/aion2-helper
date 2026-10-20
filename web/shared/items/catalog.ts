@@ -637,7 +637,7 @@ export function createItemDropMapScene(
     emptyMessage: `Нет координат дропа на карте ${label}.`,
     focusLabel: 'Все координаты',
     hintExtra: markers.length
-      ? `${markers.length} координат · клик по % — карточка моба`
+      ? `${markers.length} координат · клик по % - карточка моба`
       : undefined,
   })
 }
@@ -716,7 +716,7 @@ export function createMonsterSpawnScene(
     emptyMessage: `Нет координат спауна на карте ${label}.`,
     focusLabel: 'Все координаты',
     hintExtra: markers.length
-      ? `${markers.length} координат · клик по портрету — дроп`
+      ? `${markers.length} координат · клик по портрету - дроп`
       : undefined,
   })
 }

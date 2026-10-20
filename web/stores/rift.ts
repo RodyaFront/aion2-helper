@@ -46,7 +46,7 @@ export const useRiftStore = defineStore('rift', {
       return state.phase === 'open'
     },
     portalCountdown(state): string {
-      if (state.portalClosesAt == null) return '—'
+      if (state.portalClosesAt == null) return '-'
       return formatCountdown((state.portalClosesAt - state.now) / 1000)
     },
     nextCountdown(state): string {

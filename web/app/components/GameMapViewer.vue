@@ -864,7 +864,7 @@ watch(
         </button>
       </div>
       <p class="boss-map-hint">
-        Колёсико — зум, перетаскивание — сдвиг
+        Колёсико - зум, перетаскивание - сдвиг
         <template v-if="domCapped">
           · на экране {{ MAX_DOM_MARKERS }} из {{ culledCount }}
         </template>

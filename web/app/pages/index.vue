@@ -23,7 +23,7 @@ const filterLabel = computed(() => {
 
 const nextLabel = computed(() => {
   const next = store.nextBoss
-  if (!next || next.respawnAt == null) return '—'
+  if (!next || next.respawnAt == null) return '-'
   const left = (next.respawnAt - store.now) / 1000
   return `${next.name} · ${formatCountdown(left)}`
 })
@@ -32,7 +32,7 @@ const emptyCopy = computed(() => {
   if (store.query.trim()) return 'Ничего не найдено. Сбрось поиск или фильтр.'
   if (store.filter === 'favorite') return 'Нет избранных. Нажми закладку на карточке босса.'
   if (store.filter === 'ready') return 'Нет готовых боссов. Жди респаун или смени фильтр.'
-  if (store.filter === 'active') return 'Нет перерождающихся боссов. Запусти убийством или «Своё время».'
+  if (store.filter === 'active') return 'Нет перерождающихся боссов. Запусти убийством или "Своё время".'
   if (store.filter === 'idle') return 'Все боссы уже с таймером.'
   return 'Ничего не найдено. Сбрось фильтр или поиск.'
 })
@@ -79,7 +79,7 @@ onBeforeUnmount(() => {
               ref="searchRef"
               v-model="store.query"
               name="boss-search"
-              placeholder="Поиск по имени или месту (EN/RU)…"
+              placeholder="Поиск по имени или месту (на английском или русском)..."
               aria-label="Поиск боссов"
             />
             <SegmentedControl
@@ -95,12 +95,14 @@ onBeforeUnmount(() => {
         </div>
 
         <main class="main">
+          <AutoKillBanner />
+
           <div class="section-bar">
             <p class="section-label">
-              В фильтре «{{ filterLabel }}»: {{ store.sortedBosses.length }} · всего {{ store.bosses.length }}
+              В фильтре "{{ filterLabel }}": {{ store.sortedBosses.length }} · всего {{ store.bosses.length }}
             </p>
             <p class="hint">
-              <span class="kbd">/</span> поиск · «Своё время» — ч / мин / сек с карты
+              <span class="kbd">/</span> поиск · таймеры сами с убийства или списка на карте в игре
             </p>
           </div>
 

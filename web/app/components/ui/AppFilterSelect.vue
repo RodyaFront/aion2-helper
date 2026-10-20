@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   label: '',
   placeholder: 'Все',
-  searchPlaceholder: 'Фильтр…',
+  searchPlaceholder: 'Фильтр...',
   ariaLabel: 'Фильтр',
 })
 

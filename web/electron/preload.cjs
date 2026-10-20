@@ -4,9 +4,6 @@ contextBridge.exposeInMainWorld('aionTracker', {
   notify(payload) {
     ipcRenderer.send('tracker:notify', payload)
   },
-  setAlarming(active) {
-    ipcRenderer.send('tracker:alarming', Boolean(active))
-  },
   /** Windows SAPI speak (used when Chromium voice list is empty). */
   speak(payload) {
     return ipcRenderer.invoke('tracker:speak', payload)
@@ -26,5 +23,42 @@ contextBridge.exposeInMainWorld('aionTracker', {
   },
   saveState(key, data) {
     return ipcRenderer.invoke('tracker:save-state', key, data)
+  },
+  detectNpcap() {
+    return ipcRenderer.invoke('tracker:npcap-detect')
+  },
+  getAutoKillStatus() {
+    return ipcRenderer.invoke('tracker:auto-kill-status')
+  },
+  setAutoKillTrack(enabled) {
+    return ipcRenderer.invoke('tracker:auto-kill-set', Boolean(enabled))
+  },
+  /** Detect Npcap and start watcher when driver is present (default-on launch). */
+  ensureAutoKillTrack() {
+    return ipcRenderer.invoke('tracker:auto-kill-ensure')
+  },
+  onBossKill(handler) {
+    const listener = (_event, payload) => {
+      handler(payload)
+    }
+    ipcRenderer.on('tracker:boss-kill', listener)
+    return () => ipcRenderer.removeListener('tracker:boss-kill', listener)
+  },
+  onFieldSync(handler) {
+    const listener = (_event, payload) => {
+      handler(payload)
+    }
+    ipcRenderer.on('tracker:field-sync', listener)
+    return () => ipcRenderer.removeListener('tracker:field-sync', listener)
+  },
+  onAutoKillStatus(handler) {
+    const listener = (_event, payload) => {
+      handler(payload)
+    }
+    ipcRenderer.on('tracker:auto-kill-status', listener)
+    return () => ipcRenderer.removeListener('tracker:auto-kill-status', listener)
+  },
+  openExternal(url) {
+    return ipcRenderer.invoke('tracker:open-external', url)
   },
 })

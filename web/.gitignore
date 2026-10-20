@@ -40,4 +40,10 @@ vendor/piper/voices.json
 # Temporary scrape downloads
 tmp-scrape/
 
+# boss-kill-watcher build outputs
+electron/native/boss-kill-watcher/bin/
+electron/native/boss-kill-watcher/obj/
+electron/native/boss-kill-watcher/publish/
+electron/native/boss-kill-watcher/_smoke-*.txt
+
 # Keep generated mob loot + drop icons in git (offline catalog)

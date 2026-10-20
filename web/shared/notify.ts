@@ -1,6 +1,15 @@
-/** Windows / browser toast. Silent OS blip — app plays its own Web Audio. */
+import { useSettingsStore } from '../stores/settings'
+
+/** Windows / browser toast. Silent OS blip - app plays its own Web Audio. */
 export function notifyNative(title: string, body: string) {
   if (typeof window === 'undefined') return
+
+  try {
+    if (!useSettingsStore().alertsLive) return
+  }
+  catch {
+    // Pinia not ready - allow notify
+  }
 
   const api = window.aionTracker
   if (api?.notify) {

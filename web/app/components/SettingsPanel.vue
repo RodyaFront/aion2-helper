@@ -46,7 +46,18 @@ const ttsEnabled = computed({
   set: (value: boolean) => settings.setTtsEnabled(value),
 })
 
+const alertsMuted = computed({
+  get: () => settings.alertsMuted,
+  set: (value: boolean) => {
+    settings.setAlertsMuted(value)
+    if (value) stopSpeech()
+  },
+})
+
 const muteHint = computed(() => {
+  if (alertsMuted.value) {
+    return 'Глобальный мут включён - звук, голос и уведомления Windows выключены. Переключатели ниже не менялись.'
+  }
   if (volume.value === 0) return 'Громкость 0% - звук и голос выключены. Уведомление Windows всё ещё может появиться.'
   if (!ttsEnabled.value) return 'Голос выключен - тесты играют только звук и уведомление.'
   return null
@@ -85,6 +96,7 @@ const BOSS_TIER_META: Record<BossWarnTier, { thresholdSec: number, title: string
 }
 
 function previewBossTier(tier: BossWarnTier) {
+  if (!settings.alertsLive) return
   unlockAudio()
   ensureVoices()
   const meta = BOSS_TIER_META[tier]
@@ -94,20 +106,23 @@ function previewBossTier(tier: BossWarnTier) {
 }
 
 function previewBossReady() {
+  if (!settings.alertsLive) return
   unlockAudio()
   ensureVoices()
-  notifyNative('Тест: респаун', 'Босс готов - можно фармить')
+  notifyNative('Тест: респаун', 'Босс готов')
   if (settings.bossSoundEnabled) void playBossWarn('alert')
   speakAlert(bossReadySpeech(DEMO_BOSS))
 }
 
 function previewRiftWarn(mins: 15 | 10) {
+  if (!settings.alertsLive) return
   unlockAudio()
   ensureVoices()
   rift.alertWarn(mins * 60 * 1000)
 }
 
 function previewRiftOpen() {
+  if (!settings.alertsLive) return
   unlockAudio()
   ensureVoices()
   rift.alertOpened()
@@ -128,6 +143,30 @@ function stopPreview() {
     />
 
     <section v-if="tab === 'params'" class="settings-section" aria-labelledby="settings-sound-heading">
+      <div
+        class="settings-mute-banner"
+        :class="{ 'is-on': alertsMuted }"
+        role="status"
+      >
+        <div class="settings-mute-banner-copy">
+          <p class="settings-mute-banner-title">
+            Глобальный мут
+          </p>
+          <p class="settings-mute-banner-desc">
+            Глушит звук, голос и уведомления Windows. Не трогает переключатели ниже.
+          </p>
+        </div>
+        <label class="settings-mute-banner-switch" for="alerts-muted">
+          <span class="settings-mute-banner-switch-label">{{ alertsMuted ? 'Вкл' : 'Выкл' }}</span>
+          <input
+            id="alerts-muted"
+            v-model="alertsMuted"
+            class="settings-switch-input"
+            type="checkbox"
+          >
+        </label>
+      </div>
+
       <header class="settings-section-head">
         <h3 id="settings-sound-heading" class="settings-section-title">
           Звук и голос
@@ -209,6 +248,10 @@ function stopPreview() {
           Как в бою: уведомление Windows, звук и голос (если голос включён).
         </p>
       </header>
+
+      <p v-if="alertsMuted" class="settings-note">
+        Глобальный мут включён - тесты ничего не воспроизведут. Выключи мут во вкладке Параметры.
+      </p>
 
       <div class="settings-test-group">
         <h4 class="settings-test-group-title">

@@ -42,9 +42,9 @@ const ROW_HEIGHT = 52
 
 const levelOptions = [
   { value: 'all', label: 'Любой уровень' },
-  { value: '1-15', label: '1–15' },
-  { value: '16-30', label: '16–30' },
-  { value: '31-44', label: '31–44' },
+  { value: '1-15', label: '1-15' },
+  { value: '16-30', label: '16-30' },
+  { value: '31-44', label: '31-44' },
   { value: '45+', label: '45+' },
 ]
 
@@ -264,7 +264,7 @@ function onListKeydown(e: KeyboardEvent) {
 }
 
 function metaLine(mob: RegionMob): string {
-  return [mob.creatureName, raceLabel(mob.race)].filter((bit) => bit && bit !== 'Без расы').join(' · ') || '—'
+  return [mob.creatureName, raceLabel(mob.race)].filter((bit) => bit && bit !== 'Без расы').join(' · ') || '-'
 }
 
 watch(() => route.query, () => readQuery())
@@ -322,7 +322,7 @@ onBeforeUnmount(() => {
                 v-model="query"
                 class="items-search"
                 name="monster-search"
-                placeholder="Поиск по имени (EN/RU) или ID…"
+                placeholder="Поиск по имени (на английском или русском) или ID..."
                 aria-label="Поиск монстров"
                 :debounce-ms="120"
               />
@@ -383,7 +383,7 @@ onBeforeUnmount(() => {
                 :options="creatureOptions"
                 label="Существо"
                 aria-label="Существо"
-                search-placeholder="Найти существо…"
+                search-placeholder="Найти существо..."
               />
               <AppFilterSelect
                 v-model="grade"
@@ -405,7 +405,7 @@ onBeforeUnmount(() => {
           <div class="section-bar">
             <p class="section-label">
               <template v-if="status === 'loading'">
-                Загрузка монстров…
+                Загрузка монстров...
               </template>
               <template v-else-if="status === 'error'">
                 Не удалось загрузить монстров
@@ -434,7 +434,7 @@ onBeforeUnmount(() => {
             v-else-if="status === 'loading'"
             class="empty-state"
           >
-            Подтягиваем монстров Verteron…
+            Подтягиваем монстров Verteron...
           </div>
 
           <div
@@ -496,7 +496,7 @@ onBeforeUnmount(() => {
                     <span>{{ metaLine(item) }}</span>
                   </div>
                   <div class="items-col-lvl">
-                    {{ item.level ?? '—' }}
+                    {{ item.level ?? '-' }}
                   </div>
                   <div class="items-col-id">
                     {{ item.spawnCount }} {{ pointsLabel(item.spawnCount) }}

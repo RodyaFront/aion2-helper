@@ -41,7 +41,7 @@ export function bossWarnSpeech(name: string, thresholdSec: number): SpeechPayloa
 export function bossReadySpeech(name: string): SpeechPayload {
   return {
     enName: name,
-    ru: 'возродился. Можно фармить.',
+    ru: 'возродился.',
   }
 }
 

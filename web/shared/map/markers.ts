@@ -38,12 +38,12 @@ function rateTooltip(rate: number): string | null {
 
 function formatRateRange(min: number, max: number): string {
   if (Math.abs(min - max) < 0.05) return formatRate(min)
-  return `${formatRate(min).replace('%', '')}–${formatRate(max)}`
+  return `${formatRate(min).replace('%', '')}-${formatRate(max)}`
 }
 
 function formatRateRangePrecise(min: number, max: number): string {
   if (Math.abs(min - max) < 1e-9) return formatRatePrecise(min)
-  return `${formatRatePrecise(min).replace('%', '')}–${formatRatePrecise(max)}`
+  return `${formatRatePrecise(min).replace('%', '')}-${formatRatePrecise(max)}`
 }
 
 export class BossPinMarker implements IMapMarker {

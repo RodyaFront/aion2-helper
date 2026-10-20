@@ -58,7 +58,7 @@ const statusLabel = computed(() => {
     case 'ready': return 'Готов'
     case 'urgent': return 'Скоро'
     case 'active': return 'Перерождается'
-    default: return 'Нет'
+    default: return 'Нет таймера'
   }
 })
 
@@ -76,26 +76,36 @@ const countdownClass = computed(() => ({
   'is-urgent': status.value === 'urgent',
 }))
 
-const killBtnClass = computed(() => {
-  if (status.value === 'ready') return 'btn btn-ready'
-  if (status.value === 'idle') return 'btn btn-primary'
-  return 'btn btn-kill-quiet'
-})
+/** Ready + map pin: go there first. Idle: start timer. Ready without coords: kill. */
+const showPrimaryMap = computed(() => status.value === 'ready' && hasMapCoord.value)
+const showPrimaryKill = computed(() =>
+  status.value === 'idle' || (status.value === 'ready' && !hasMapCoord.value),
+)
+const showSecondaryKill = computed(() =>
+  status.value === 'ready' && hasMapCoord.value
+    ? true
+    : status.value === 'active' || status.value === 'urgent',
+)
 
 const killLabel = computed(() => {
   if (status.value === 'ready') return 'Убит снова'
-  if (status.value === 'idle') return 'Только что убит'
-  return 'Перезапустить таймер'
+  if (status.value === 'idle') return 'Убит'
+  return 'Отметить убийство'
 })
 
 const countdownText = computed(() => {
-  if (remainingSec.value == null) return '—'
+  if (remainingSec.value == null) return '-'
+  if (status.value === 'ready') return 'Готов'
   return formatCountdown(remainingSec.value)
 })
 
 const caption = computed(() => {
-  if (status.value === 'idle') return 'Таймер не запущен'
-  if (status.value === 'ready') return 'Респаун должен быть — можно фармить'
+  if (status.value === 'idle') {
+    return 'Появится после убийства или синка с карты в игре'
+  }
+  if (status.value === 'ready') {
+    return hasMapCoord.value ? 'Открой карту и беги' : 'Можно фармить'
+  }
   if (status.value === 'urgent') return 'Скоро респаун'
   return `До респауна · цикл ${formatInterval(props.boss.respawnMinutes)}`
 })
@@ -191,12 +201,34 @@ function toggle(kind: 'custom' | 'interval') {
     </div>
 
     <div class="boss-actions">
-      <button type="button" :class="killBtnClass" @click="onKilled">
+      <button
+        v-if="showPrimaryMap"
+        type="button"
+        class="btn btn-ready"
+        @click="showMap = true"
+      >
+        <MapPinned class="ui-icon" aria-hidden="true" />
+        На карте
+      </button>
+      <button
+        v-else-if="showPrimaryKill"
+        type="button"
+        class="btn btn-primary"
+        @click="onKilled"
+      >
         {{ killLabel }}
       </button>
       <div class="boss-actions-secondary">
         <button
-          v-if="hasMapCoord"
+          v-if="showSecondaryKill"
+          type="button"
+          class="btn btn-sm btn-ghost"
+          @click="onKilled"
+        >
+          {{ killLabel }}
+        </button>
+        <button
+          v-if="hasMapCoord && !showPrimaryMap"
           type="button"
           class="btn btn-sm btn-ghost"
           @click="showMap = true"
@@ -207,9 +239,6 @@ function toggle(kind: 'custom' | 'interval') {
         <button type="button" class="btn btn-sm btn-ghost" :aria-expanded="panel === 'custom'" @click="toggle('custom')">
           Своё время
         </button>
-        <button type="button" class="btn btn-sm btn-ghost" :aria-expanded="panel === 'interval'" @click="toggle('interval')">
-          Интервал
-        </button>
         <button
           v-if="boss.respawnAt != null"
           type="button"
@@ -218,6 +247,9 @@ function toggle(kind: 'custom' | 'interval') {
         >
           <RotateCcw class="ui-icon" aria-hidden="true" />
           Сбросить
+        </button>
+        <button type="button" class="btn btn-sm btn-ghost" :aria-expanded="panel === 'interval'" @click="toggle('interval')">
+          Интервал
         </button>
         <button
           v-if="boss.custom"
@@ -232,7 +264,7 @@ function toggle(kind: 'custom' | 'interval') {
     </div>
 
     <div v-if="panel === 'custom'" class="inline-panel">
-      <p class="countdown-caption">Осталось по карте в игре (пустое поле = 0)</p>
+      <p class="countdown-caption">Сколько осталось (пустое поле = 0). Для всех сразу - список полевых боссов на карте в игре.</p>
       <div class="duration-fields">
         <label class="duration-field">
           <span>ч</span>

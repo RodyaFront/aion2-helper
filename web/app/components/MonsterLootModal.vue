@@ -46,7 +46,7 @@ const metaBits = computed(() => {
   const bits: string[] = []
   if (props.mob.level != null) {
     if (lootView.value?.composed) {
-      bits.push(`Ур. ${props.mob.level}→${lootView.value.effectiveLevel}`)
+      bits.push(`Ур. ${props.mob.level}->${lootView.value.effectiveLevel}`)
     }
     else {
       bits.push(`Ур. ${props.mob.level}`)
@@ -76,7 +76,7 @@ const lootLevelHint = computed(() => {
   if (!view?.composed) return null
   const base = view.baseLevel
   if (base != null) {
-    return `Дроп при персонаже ${ASSUMED_PLAYER_LEVEL} (база моба ${base} → эфф. ${view.effectiveLevel})`
+    return `Дроп при персонаже ${ASSUMED_PLAYER_LEVEL} (база моба ${base} -> эфф. ${view.effectiveLevel})`
   }
   return `Дроп при персонаже ${ASSUMED_PLAYER_LEVEL}`
 })

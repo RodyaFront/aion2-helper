@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
   debounceMs?: number
   autofocus?: boolean
 }>(), {
-  placeholder: 'Поиск…',
+  placeholder: 'Поиск...',
   ariaLabel: 'Поиск',
   name: 'search',
   debounceMs: 160,

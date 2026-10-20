@@ -103,7 +103,7 @@ function onSelectMarker(marker: IMapMarker) {
             <span>из {{ totalMarkers }} координат</span>
           </p>
           <p class="map-data-hint">
-            Пин — портрет моба. Клик открывает таблицу дропа.
+            Пин - портрет моба. Клик открывает таблицу дропа.
             Близкие координаты схлопываются в ×N.
           </p>
         </section>

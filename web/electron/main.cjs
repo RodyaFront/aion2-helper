@@ -2,17 +2,29 @@ const { app, BrowserWindow, shell, Notification, Tray, Menu, nativeImage, ipcMai
 const http = require('node:http')
 const fs = require('node:fs')
 const path = require('node:path')
+const readline = require('node:readline')
 const { spawn } = require('node:child_process')
 const piperTts = require('./piper-tts.cjs')
 const isDev = !app.isPackaged
 let staticServer = null
 let mainWindow = null
 let tray = null
-let isAlarming = false
 let quitting = false
 /** Active System.Speech PowerShell child (fallback when Piper is unavailable). */
 let ttsChild = null
 let ttsChain = Promise.resolve()
+
+/** boss-kill-watcher sidecar (Npcap death events). */
+let killWatcherChild = null
+let killWatcherRl = null
+/** Bumps on each start/stop so intentional restarts don't report false errors. */
+let killWatcherEpoch = 0
+/** @type {'off' | 'missing_npcap' | 'listening' | 'error' | 'starting'} */
+let autoKillStatus = 'off'
+let autoKillMessage = ''
+let autoKillEnabled = false
+/** Serialize start/stop so plugin + banner don't race. */
+let autoKillOp = Promise.resolve()
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -62,7 +74,7 @@ h1{margin:0;font-size:1.55rem;color:#e6e9ef;font-weight:600}
 </style></head><body><div class="wrap">
 <p class="brand">AION 2 · Lamuatan</p>
 <h1>Трекер боссов · Verteron</h1>
-<p style="margin:.35rem 0 0;font-size:.875rem">Загрузка…</p>
+<p style="margin:.35rem 0 0;font-size:.875rem">Загрузка...</p>
 <div class="grid">
 ${Array.from({ length: 6 }, () => `<div class="card"><div class="art"></div><div class="body"><div class="bar w60"></div><div class="bar w40"></div><div class="bar w80 h2"></div></div></div>`).join('')}
 </div></div></body></html>`
@@ -126,7 +138,7 @@ function focusMainWindow() {
 function buildTray() {
   if (tray) return
   tray = new Tray(trayIcon())
-  tray.setToolTip('AION 2 — трекер боссов')
+  tray.setToolTip('AION 2 - трекер боссов')
   tray.on('click', () => focusMainWindow())
   tray.on('double-click', () => focusMainWindow())
   updateTrayMenu()
@@ -136,7 +148,7 @@ function updateTrayMenu() {
   if (!tray) return
   const menu = Menu.buildFromTemplate([
     {
-      label: isAlarming ? 'Будильник активен — открыть' : 'Открыть трекер',
+      label: 'Открыть трекер',
       click: () => focusMainWindow(),
     },
     { type: 'separator' },
@@ -149,7 +161,7 @@ function updateTrayMenu() {
     },
   ])
   tray.setContextMenu(menu)
-  tray.setToolTip(isAlarming ? 'AION 2 — босс готов!' : 'AION 2 — трекер боссов')
+  tray.setToolTip('AION 2 - трекер боссов')
 }
 
 function probeStaticUrl(url, timeoutMs = 800) {
@@ -443,15 +455,288 @@ ipcMain.on('tracker:notify', (_event, payload = {}) => {
   notification.show()
 })
 
-ipcMain.on('tracker:alarming', (_event, active) => {
-  isAlarming = Boolean(active)
-  updateTrayMenu()
-  if (isAlarming && tray) {
-    tray.displayBalloon?.({
-      title: 'AION 2 — босс готов',
-      content: 'Таймер респауна закончился. Открой трекер.',
+function killWatcherExePath() {
+  const candidates = [
+    path.join(__dirname, 'native', 'boss-kill-watcher', 'publish', 'boss-kill-watcher.exe'),
+    path.join(process.resourcesPath || '', 'boss-kill-watcher', 'boss-kill-watcher.exe'),
+    path.join(__dirname, 'native', 'boss-kill-watcher', 'boss-kill-watcher.exe'),
+  ]
+  for (const candidate of candidates) {
+    if (candidate && fs.existsSync(candidate)) return candidate
+  }
+  return null
+}
+
+function setAutoKillStatus(status, message = '') {
+  autoKillStatus = status
+  autoKillMessage = message || ''
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('tracker:auto-kill-status', getAutoKillStatusPayload())
+  }
+}
+
+function getAutoKillStatusPayload() {
+  return {
+    enabled: autoKillEnabled,
+    status: autoKillStatus,
+    message: autoKillMessage,
+    hasSidecar: Boolean(killWatcherExePath()),
+  }
+}
+
+function detectNpcapViaSidecar() {
+  const exe = killWatcherExePath()
+  if (!exe) {
+    return Promise.resolve({
+      ok: false,
+      status: 'error',
+      message: 'Не удалось запустить автотаймер. Переустанови приложение.',
+      downloadUrl: 'https://npcap.com/#download',
     })
   }
+
+  return new Promise((resolve) => {
+    const child = spawn(exe, ['detect'], {
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    let out = ''
+    let err = ''
+    child.stdout.on('data', (chunk) => { out += chunk.toString('utf8') })
+    child.stderr.on('data', (chunk) => { err += chunk.toString('utf8') })
+    child.on('error', (error) => {
+      resolve({
+        ok: false,
+        status: 'error',
+        message: String(error.message || error),
+        downloadUrl: 'https://npcap.com/#download',
+      })
+    })
+    child.on('close', (code) => {
+      const line = out.trim().split(/\r?\n/).filter(Boolean).pop() || ''
+      try {
+        const parsed = JSON.parse(line)
+        resolve({
+          ok: Boolean(parsed.ok),
+          status: parsed.status || (parsed.ok ? 'ok' : 'missing'),
+          location: parsed.location || null,
+          downloadUrl: parsed.downloadUrl || 'https://npcap.com/#download',
+          message: parsed.message || err.trim() || '',
+          exitCode: code,
+        })
+      }
+      catch {
+        resolve({
+          ok: false,
+          status: 'error',
+          message: 'Не удалось проверить Npcap.',
+          downloadUrl: 'https://npcap.com/#download',
+          exitCode: code,
+        })
+      }
+    })
+  })
+}
+
+function stopKillWatcher() {
+  killWatcherEpoch += 1
+  if (killWatcherRl) {
+    try { killWatcherRl.close() }
+    catch { /* ignore */ }
+    killWatcherRl = null
+  }
+  if (killWatcherChild) {
+    const child = killWatcherChild
+    killWatcherChild = null
+    try { child.kill() }
+    catch { /* ignore */ }
+  }
+  if (!autoKillEnabled) {
+    setAutoKillStatus('off', '')
+  }
+}
+
+function startKillWatcher() {
+  // Already capturing — keep the live process (avoid kill→false error on double enable).
+  if (killWatcherChild && (autoKillStatus === 'listening' || autoKillStatus === 'starting')) {
+    return true
+  }
+
+  stopKillWatcher()
+  const exe = killWatcherExePath()
+  if (!exe) {
+    setAutoKillStatus('error', 'Не удалось запустить автотаймер. Переустанови приложение.')
+    return false
+  }
+
+  const epoch = ++killWatcherEpoch
+  setAutoKillStatus('starting', 'Запуск...')
+  try {
+    killWatcherChild = spawn(exe, ['watch'], {
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      cwd: path.dirname(exe),
+    })
+  }
+  catch (error) {
+    console.error('[boss-kill-watcher] start', error)
+    setAutoKillStatus('error', 'Не удалось запустить автотаймер.')
+    return false
+  }
+
+  const child = killWatcherChild
+  child.stderr.on('data', (chunk) => {
+    const text = chunk.toString('utf8').trim()
+    if (text) console.error('[boss-kill-watcher]', text)
+  })
+
+  killWatcherRl = readline.createInterface({ input: child.stdout })
+  killWatcherRl.on('line', (line) => {
+    if (epoch !== killWatcherEpoch) return
+    const raw = String(line || '').trim()
+    if (!raw) return
+    let msg
+    try {
+      msg = JSON.parse(raw)
+    }
+    catch {
+      return
+    }
+    if (msg.type === 'death' && Number.isFinite(msg.npcId)) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('tracker:boss-kill', {
+          npcId: Number(msg.npcId),
+          at: msg.at ?? Date.now(),
+          entityId: msg.entityId,
+        })
+      }
+      return
+    }
+    if (msg.type === 'field_sync' && Array.isArray(msg.bosses)) {
+      const bosses = msg.bosses
+        .filter((b) => b && Number.isFinite(b.npcId))
+        .map((b) => ({
+          npcId: Number(b.npcId),
+          alive: Boolean(b.alive),
+          respawnAt: Number.isFinite(b.respawnAt) ? Number(b.respawnAt) : null,
+        }))
+      if (bosses.length && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('tracker:field-sync', {
+          at: msg.at ?? Date.now(),
+          bosses,
+        })
+      }
+      return
+    }
+    if (msg.type === 'status' || msg.status) {
+      const status = String(msg.status || 'listening').toLowerCase()
+      if (status === 'missing_npcap' || status === 'missing') {
+        setAutoKillStatus('missing_npcap', 'Драйвер Npcap не найден')
+      }
+      else if (status === 'error') {
+        console.error('[boss-kill-watcher] status error', msg.message)
+        setAutoKillStatus('error', 'Не удалось запустить автотаймер.')
+      }
+      else if (status === 'listening' || status === 'connected' || status === 'waiting') {
+        setAutoKillStatus('listening', 'Работает')
+      }
+      else if (status === 'stopped') {
+        if (autoKillEnabled && epoch === killWatcherEpoch) {
+          setAutoKillStatus('error', 'Не удалось запустить автотаймер.')
+        }
+        else if (!autoKillEnabled) {
+          setAutoKillStatus('off', '')
+        }
+      }
+    }
+  })
+
+  child.on('error', (error) => {
+    if (epoch !== killWatcherEpoch) return
+    console.error('[boss-kill-watcher] process error', error)
+    setAutoKillStatus('error', 'Не удалось запустить автотаймер.')
+    if (killWatcherChild === child) killWatcherChild = null
+  })
+
+  child.on('close', (code) => {
+    if (killWatcherChild === child) killWatcherChild = null
+    if (epoch !== killWatcherEpoch) return
+    if (killWatcherRl) {
+      try { killWatcherRl.close() }
+      catch { /* ignore */ }
+      killWatcherRl = null
+    }
+    if (autoKillEnabled && autoKillStatus !== 'missing_npcap') {
+      console.error('[boss-kill-watcher] exited', code)
+      setAutoKillStatus('error', 'Не удалось запустить автотаймер.')
+    }
+  })
+
+  return true
+}
+
+async function setAutoKillTrack(enabled) {
+  autoKillEnabled = Boolean(enabled)
+  if (!autoKillEnabled) {
+    stopKillWatcher()
+    setAutoKillStatus('off', '')
+    return getAutoKillStatusPayload()
+  }
+
+  const detect = await detectNpcapViaSidecar()
+  if (!detect.ok) {
+    // Keep preference enabled in renderer; only reflect driver/runtime status.
+    if (detect.status === 'missing' || detect.status === 'missing_npcap') {
+      stopKillWatcher()
+      setAutoKillStatus('missing_npcap', 'Драйвер Npcap не найден')
+    }
+    else {
+      stopKillWatcher()
+      setAutoKillStatus('error', 'Не удалось запустить автотаймер.')
+    }
+    return { ...getAutoKillStatusPayload(), detect }
+  }
+
+  startKillWatcher()
+  return getAutoKillStatusPayload()
+}
+
+function enqueueAutoKill(fn) {
+  const run = autoKillOp.then(fn, fn)
+  autoKillOp = run.then(() => {}, () => {})
+  return run
+}
+
+ipcMain.handle('tracker:npcap-detect', async () => detectNpcapViaSidecar())
+
+ipcMain.handle('tracker:auto-kill-status', () => getAutoKillStatusPayload())
+
+ipcMain.handle('tracker:auto-kill-set', (_event, enabled) => enqueueAutoKill(() => setAutoKillTrack(enabled)))
+
+/** Start watcher when Npcap is present (default-on launch path). */
+ipcMain.handle('tracker:auto-kill-ensure', () => enqueueAutoKill(async () => {
+  // Preference stays "on"; status reflects whether capture actually runs.
+  autoKillEnabled = true
+  const detect = await detectNpcapViaSidecar()
+  if (!detect.ok) {
+    stopKillWatcher()
+    if (detect.status === 'missing' || detect.status === 'missing_npcap') {
+      setAutoKillStatus('missing_npcap', 'Драйвер Npcap не найден')
+    }
+    else {
+      setAutoKillStatus('error', 'Не удалось запустить автотаймер.')
+    }
+    return { ...getAutoKillStatusPayload(), detect }
+  }
+  startKillWatcher()
+  return { ...getAutoKillStatusPayload(), detect }
+}))
+
+ipcMain.handle('tracker:open-external', async (_event, url) => {
+  const target = String(url || '')
+  if (!/^https?:\/\//i.test(target)) return false
+  await shell.openExternal(target)
+  return true
 })
 
 if (gotSingleInstanceLock) {
@@ -467,6 +752,8 @@ if (gotSingleInstanceLock) {
 
 app.on('before-quit', () => {
   quitting = true
+  autoKillEnabled = false
+  stopKillWatcher()
   if (staticServer) {
     staticServer.close()
     staticServer = null

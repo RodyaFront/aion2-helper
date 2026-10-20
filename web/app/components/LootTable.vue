@@ -22,7 +22,7 @@ const props = withDefaults(defineProps<{
   density: 'dense',
   totalCount: null,
   emptyMessage: 'Нет предметов.',
-  searchPlaceholder: 'Поиск…',
+  searchPlaceholder: 'Поиск...',
   hint: null,
 })
 
@@ -100,7 +100,7 @@ function cycleSort() {
   sortKey.value = sortKey.value === 'chance' ? 'name' : 'chance'
 }
 
-const sortLabel = computed(() => (sortKey.value === 'chance' ? '%' : 'А–Я'))
+const sortLabel = computed(() => (sortKey.value === 'chance' ? '%' : 'А-Я'))
 </script>
 
 <template>
@@ -142,7 +142,7 @@ const sortLabel = computed(() => (sortKey.value === 'chance' ? '%' : 'А–Я'))
           </button>
         </label>
         <UiAppTooltip
-          :content="sortKey === 'chance' ? 'Сортировка: процент (клик — по имени)' : 'Сортировка: имя (клик — по %)'"
+          :content="sortKey === 'chance' ? 'Сортировка: процент (клик - по имени)' : 'Сортировка: имя (клик - по %)'"
         >
           <button
             type="button"

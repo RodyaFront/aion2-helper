@@ -111,6 +111,8 @@
   --color-ready-ink: #1f1704;
 
   --color-warn: #c9922e;
+  /* Soft tips / recommendations (same family as active; follows race via --color-active). */
+  --color-info: var(--color-active);
   --color-danger: #c45a5a;
   --color-danger-soft: rgba(196, 90, 90, 0.12);
   --color-danger-soft-hover: rgba(196, 90, 90, 0.2);

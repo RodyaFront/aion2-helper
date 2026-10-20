@@ -86,6 +86,7 @@ Never use pure white (`#fff`) for body text; slight cool off-white keeps contras
 | **Urgent** | Coral / warm orange | `--color-urgent*` | Approaching deadline (≤15 min). Warm, mobilizing; avoid pure red (reserved for destructive) |
 | **Ready** | Gold / amber | `--color-ready*` | Reward / “go now”. Highest luminance among statuses so it pops on dark UI |
 | **Danger** | Soft red | `--color-danger*` | Destructive actions only (delete), never timer state |
+| **Info** | Same as Active | `--color-info` (= `--color-active`) | Soft tips / recommendations (e.g. sync timers from map), not alarms |
 
 ### Contrast rules
 
@@ -148,16 +149,16 @@ Honor `prefers-reduced-motion: reduce` (status animations off). Motion reinforce
 
 ## 7. Grid states (scan hierarchy)
 
-Priority on a card: **status + countdown > kill CTA**.
+Priority on a card: **status + countdown > primary CTA**. Ready = route first (map); kill confirms after the fight. Mid-countdown never gets a primary restart (auto-kill + map sync are the source of truth).
 
-| State | Card | Kill CTA | Grid |
-| --- | --- | --- | --- |
-| Idle | desaturated, lower opacity | `btn-primary` «Только что убит» | default |
-| Active (>15м) | teal border | quiet outline «Перезапустить таймер» | default / focus if filter Перерождаются ≤3 |
-| Urgent (≤15м) | coral wash + breathe | quiet outline | same |
-| Ready | gold pulse | `btn-ready` «Убит снова» | focus if filter Готовы ≤3 |
+| State | Card | Primary CTA | Secondary | Grid |
+| --- | --- | --- | --- | --- |
+| Idle | desaturated, lower opacity | `btn-primary` «Убит» | map ghost if coords | default |
+| Active (>15м) | teal border | none | map first, then «Отметить убийство» | default / focus if filter Перерождаются ≤3 |
+| Urgent (≤15м) | coral wash + breathe | same as active | same | same |
+| Ready | gold; countdown shows «Готов» | `btn-ready` «На карте» (else «Убит снова») | «Убит снова» if map is primary | focus if filter Готовы ≤3 |
 
-- Filter bar copy: `В фильтре «X»: N · всего M` (stats in header stay global).
+- Filter bar copy: `В фильтре "X": N · всего M` (stats in header stay global).
 - `formatInterval`: seconds if <1 мин; never emit `0 ч` for sub-hour values.
 - Focus grid: `--grid-card-min-focus`, larger countdown.
 
@@ -178,10 +179,35 @@ Before adding UI:
 
 ---
 
-## 10. Anti-patterns (rejected)
+## 10. Copy / voice (player-facing)
+
+UI strings speak to a **regular player**, not a developer. Same rules for tray tooltips and notifications.
+
+### Typography (no “AI tells”)
+
+| Do not use in UI | Use instead |
+| --- | --- |
+| Em/en dash `—` `–` | Hyphen `-`, or rephrase with `.` / `,` |
+| Guillemets `«»` | Straight quotes `"..."`, or no quotes |
+| Arrow `→` in hints | Words (“becomes”) or ASCII `->` |
+| Empty placeholder `—` | `-` |
+| Fancy ellipsis `…` | `...` |
+
+### Wording
+
+- Prefer plain Russian: звук, голос, уведомление Windows, полевой босс, переключатель, приложение.
+- Avoid stack jargon in UI: SFX, TTS, Piper, sidecar, Electron, nuxt, field-босс, тумблер, WinPcap, opcode.
+- External product names (e.g. Npcap) are OK when the player must install that product.
+
+Agent rule: `.cursor/rules/player-copy.mdc`.
+
+---
+
+## 11. Anti-patterns (rejected)
 
 - Pill-stat soup and equal-weight button walls (scan fails).
 - Purple neon / generic AI dashboard gradients.
 - Ready and urgent both amber.
 - Countdown smaller than the location line.
 - One-off spacing “to make this card look good” without updating the scale.
+- AI typography / tech jargon in player-facing copy (see §10).

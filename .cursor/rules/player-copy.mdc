@@ -1,0 +1,25 @@
+---
+description: Player-facing UI copy — no AI typography, no tech jargon
+globs: web/app/**/*.{vue,ts},web/electron/main.cjs,web/shared/**/*.ts,web/stores/**/*.ts
+alwaysApply: false
+---
+
+# Player copy (голос «обычный игрок»)
+
+Канон: [`web/docs/DESIGN_SYSTEM.md`](web/docs/DESIGN_SYSTEM.md) § Copy / voice + [`web/docs/AI_VISUAL_CLICHES.md`](web/docs/AI_VISUAL_CLICHES.md).
+
+## Запрещено в строках, видимых игроку
+
+- Длинное/среднее тире: `—` `–` → обычный дефис `-` или перефразировать
+- Ёлочки: `«»` → `"..."` или без кавычек
+- Стрелки в подсказках: `→` → словами или `->`
+- Placeholder пустого значения: `—` → `-`
+- Фигурное многоточие `…` → `...`
+
+## Жаргон
+
+Не писать в UI: SFX, TTS, Piper, sidecar, Electron, nuxt, field-босс, тумблер, WinPcap, opcode, toast как термин.
+
+Допустимо имя внешнего продукта, если нужно для установки (Npcap).
+
+Писать просто: звук, голос, уведомление Windows, полевой босс, переключатель, приложение.

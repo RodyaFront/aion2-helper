@@ -14,11 +14,16 @@ Nuxt + TypeScript UI, упакованный в Electron `.exe`. Сервер La
 
 ```powershell
 cd d:\Aion2BossTracker\web
+npm run build:watcher    # C# sidecar (Npcap death watch), нужен .NET 8 SDK
 npm run dev              # браузер
 npm run electron:dev     # окно Electron на localhost
-npm run electron:build   # portable .exe
+npm run electron:build   # portable .exe (+ watcher)
 npm run fetch:images     # перекачать портреты в public/bosses
 ```
+
+## Автотаймер по смерти (Npcap)
+
+В Electron: баннер на странице боссов → установить [Npcap](https://npcap.com) (WinPcap API-compatible) → Detect → включить авто-отслеживание. Sidecar `boss-kill-watcher` пассивно читает пакеты; известный field-босс Verteron/Altgard добавляется в трекер и стартует таймер. Браузерный `nuxt dev` эту функцию не даёт.
 
 ## UX
 

@@ -5,8 +5,10 @@ import {
   formatWarnLead,
   normalizeFiredAlerts,
   type AlertThreshold,
+  type BossDef,
   type BossWarnTier,
   warnTierForThreshold,
+  bossByNpcId,
   bossesForRegion,
   type BossRegionId,
   slugify,
@@ -43,6 +45,14 @@ export interface TrackerToast {
   warnTier?: BossWarnTier
   /** Hybrid TTS: EN name + RU rest */
   speech?: SpeechPayload
+}
+
+/** One boss from the in-game Field Boss map list (Npcap). */
+export type FieldSyncOfferEntry = {
+  npcId: number
+  alive: boolean
+  respawnAt: number | null
+  name: string
 }
 
 type RegionsPayload = {
@@ -108,11 +118,6 @@ function replaceBoss(list: BossState[], id: string, next: BossState): BossState[
   return copy
 }
 
-function syncAlarmBridge(alarmingIds: string[]) {
-  if (!import.meta.client) return
-  window.aionTracker?.setAlarming?.(alarmingIds.length > 0)
-}
-
 function emptyRegions(): Record<BossRegionId, BossState[]> {
   return {
     verteron: seedBosses('verteron'),
@@ -148,13 +153,11 @@ export const useBossStore = defineStore('bosses', {
     filter: 'all' as FilterMode,
     hydrated: false,
     toasts: [] as TrackerToast[],
-    alarmingIds: [] as string[],
+    /** Offer to overwrite timers from the in-game Field Boss list. */
+    pendingFieldSync: null as FieldSyncOfferEntry[] | null,
   }),
 
   getters: {
-    isAlarming(state): boolean {
-      return state.alarmingIds.length > 0
-    },
     activeCount(state): number {
       return state.bosses.filter((b) => b.respawnAt != null && b.respawnAt > state.now).length
     },
@@ -245,8 +248,6 @@ export const useBossStore = defineStore('bosses', {
       this.bosses = this.regions[regionId] ?? seedBosses(regionId)
       if (opts.clearAlerts) {
         this.toasts = []
-        this.alarmingIds = []
-        syncAlarmBridge([])
       }
       this.now = Date.now()
       if (opts.persist) this.persist()
@@ -322,40 +323,21 @@ export const useBossStore = defineStore('bosses', {
         ...this.toasts,
       ].slice(0, 6)
 
-      if (kind === 'warn') {
-        window.setTimeout(() => {
-          this.toasts = this.toasts.filter((t) => t.id !== id)
-        }, 12000)
-      }
-      else {
-        this.startAlarm(boss.id)
-      }
+      // One-shot: Windows notify + sound via plugin; dismiss card after a few seconds.
+      window.setTimeout(() => {
+        this.toasts = this.toasts.filter((t) => t.id !== id)
+      }, kind === 'ready' ? 16000 : 12000)
     },
 
-    startAlarm(bossId: string) {
-      if (!this.alarmingIds.includes(bossId)) {
-        this.alarmingIds = [...this.alarmingIds, bossId]
-      }
-      syncAlarmBridge(this.alarmingIds)
-    },
-
-    silenceAlarm(bossId?: string) {
-      if (bossId) {
-        this.alarmingIds = this.alarmingIds.filter((id) => id !== bossId)
-        this.toasts = this.toasts.filter((t) => !(t.kind === 'ready' && t.bossId === bossId))
-      }
-      else {
-        this.alarmingIds = []
-        this.toasts = this.toasts.filter((t) => t.kind !== 'ready')
-      }
-      syncAlarmBridge(this.alarmingIds)
+    clearBossToasts(bossId: string) {
+      this.toasts = this.toasts.filter((t) => t.bossId !== bossId)
     },
 
     markKilled(id: string) {
       const boss = this.bosses.find((b) => b.id === id)
       if (!boss) return
       const now = Date.now()
-      this.silenceAlarm(id)
+      this.clearBossToasts(id)
       this.bosses = replaceBoss(this.bosses, id, {
         ...boss,
         respawnAt: now + boss.respawnMinutes * 60000,
@@ -365,11 +347,108 @@ export const useBossStore = defineStore('bosses', {
       this.persist()
     },
 
+    /** Ensure catalog boss is on the board (switch region if needed). */
+    ensureTracked(npcId: number, regionId: BossRegionId): BossDef | null {
+      const def = bossByNpcId(npcId, regionId)
+      if (!def) return null
+      const ownerRegion: BossRegionId = bossesForRegion('altgard').some((b) => b.id === def.id)
+        ? 'altgard'
+        : 'verteron'
+      if (ownerRegion !== this.regionId) {
+        this.applyRegion(ownerRegion, { persist: true, clearAlerts: false })
+      }
+      if (!this.bosses.find((b) => b.id === def.id)) {
+        this.bosses = [
+          ...this.bosses,
+          {
+            id: def.id,
+            name: def.name,
+            nameRu: def.nameRu,
+            location: def.location,
+            locationRu: def.locationRu,
+            respawnMinutes: def.respawnMinutes,
+            image: def.image,
+            custom: false,
+            favorite: false,
+            respawnAt: null,
+            firedAlerts: [],
+          },
+        ]
+      }
+      return def
+    },
+
+    /** Packet death: add catalog boss if missing, then start timer. */
+    ensureTrackedAndMarkKilled(npcId: number, regionId: BossRegionId): BossDef | null {
+      const def = this.ensureTracked(npcId, regionId)
+      if (!def) return null
+      this.markKilled(def.id)
+      return def
+    },
+
+    /** In-game Field Boss tab (re)opened: offer overwrite. Sidecar already gaps rapid re-sends. */
+    offerFieldSync(
+      raw: Array<{ npcId: number, alive: boolean, respawnAt: number | null }>,
+      regionId: BossRegionId,
+    ) {
+      const entries: FieldSyncOfferEntry[] = []
+      for (const row of raw) {
+        const def = bossByNpcId(row.npcId, regionId)
+        if (!def) continue
+        entries.push({
+          npcId: row.npcId,
+          alive: row.alive,
+          respawnAt: row.respawnAt,
+          name: def.nameRu || def.name,
+        })
+      }
+      if (!entries.length) return
+      // Modal already open: refresh snapshot quietly.
+      this.pendingFieldSync = entries
+    },
+
+    dismissFieldSync() {
+      this.pendingFieldSync = null
+    },
+
+    /** Overwrite all offered timers from the game list. */
+    applyPendingFieldSync() {
+      const offer = this.pendingFieldSync
+      if (!offer?.length) return
+      const now = Date.now()
+      for (const row of offer) {
+        const def = this.ensureTracked(row.npcId, this.regionId)
+        if (!def) continue
+        const boss = this.bosses.find((b) => b.id === def.id)
+        if (!boss) continue
+        this.clearBossToasts(def.id)
+        const ready = row.alive || row.respawnAt == null || row.respawnAt <= now
+        if (ready) {
+          this.bosses = replaceBoss(this.bosses, def.id, {
+            ...boss,
+            respawnAt: null,
+            firedAlerts: [],
+          })
+        }
+        else {
+          const next = syncMissedAlerts({
+            ...boss,
+            respawnAt: row.respawnAt,
+            firedAlerts: [],
+          }, now)
+          this.bosses = replaceBoss(this.bosses, def.id, next)
+        }
+      }
+      this.now = now
+      this.pendingFieldSync = null
+      this.persist()
+    },
+
     setCustomRemaining(id: string, minutes: number) {
       const boss = this.bosses.find((b) => b.id === id)
       if (!boss || !Number.isFinite(minutes) || minutes <= 0) return
       const now = Date.now()
-      this.silenceAlarm(id)
+      this.clearBossToasts(id)
       const next = syncMissedAlerts({
         ...boss,
         respawnAt: now + minutes * 60000,
@@ -393,7 +472,7 @@ export const useBossStore = defineStore('bosses', {
     clearTimer(id: string) {
       const boss = this.bosses.find((b) => b.id === id)
       if (!boss) return
-      this.silenceAlarm(id)
+      this.clearBossToasts(id)
       this.bosses = replaceBoss(this.bosses, id, {
         ...boss,
         respawnAt: null,
@@ -439,17 +518,13 @@ export const useBossStore = defineStore('bosses', {
     removeBoss(id: string) {
       const boss = this.bosses.find((b) => b.id === id)
       if (!boss?.custom) return
-      this.silenceAlarm(id)
+      this.clearBossToasts(id)
       this.bosses = this.bosses.filter((b) => b.id !== id)
       this.persist()
     },
 
     dismissToast(id: string) {
-      const toast = this.toasts.find((t) => t.id === id)
       this.toasts = this.toasts.filter((t) => t.id !== id)
-      if (toast?.kind === 'ready') {
-        this.silenceAlarm(toast.bossId)
-      }
     },
   },
 })

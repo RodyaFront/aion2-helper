@@ -10,6 +10,15 @@ venv/
 build/
 dist/
 *.manifest
+!web/electron/native/boss-kill-watcher/app.manifest
+
+# Upstream spike clone (not part of the app)
+tmp-aion-dps/
+
+# boss-kill-watcher build outputs (rebuild via npm run build:watcher)
+web/electron/native/boss-kill-watcher/bin/
+web/electron/native/boss-kill-watcher/obj/
+web/electron/native/boss-kill-watcher/publish/
 
 # Web / Nuxt / Electron (also mirrored in web/.gitignore)
 web/node_modules/

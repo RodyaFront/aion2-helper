@@ -26,6 +26,10 @@ export const useSettingsStore = defineStore('settings', {
     riftSoundEnabled: true,
     /** Web Speech API voice alerts */
     ttsEnabled: true,
+    /** Auto-start respawn timers from Npcap boss-death capture (Electron only). Default on. */
+    autoKillTrackEnabled: true,
+    /** Once true, we stop resetting autoKillTrackEnabled to default-on after upgrades. */
+    autoKillTrackUserSet: false,
   }),
 
   getters: {
@@ -48,6 +52,8 @@ export const useSettingsStore = defineStore('settings', {
         bossSoundEnabled?: boolean
         riftSoundEnabled?: boolean
         ttsEnabled?: boolean
+        autoKillTrackEnabled?: boolean
+        autoKillTrackUserSet?: boolean
       }>('settings')
       if (parsed?.race != null) {
         this.race = normalizeRace(parsed.race)
@@ -64,6 +70,16 @@ export const useSettingsStore = defineStore('settings', {
       if (typeof parsed?.ttsEnabled === 'boolean') {
         this.ttsEnabled = parsed.ttsEnabled
       }
+      // Older builds wiped "enabled" to false on start races — only honor saved
+      // value after the user explicitly toggles (autoKillTrackUserSet).
+      if (parsed?.autoKillTrackUserSet === true && typeof parsed.autoKillTrackEnabled === 'boolean') {
+        this.autoKillTrackEnabled = parsed.autoKillTrackEnabled
+        this.autoKillTrackUserSet = true
+      }
+      else {
+        this.autoKillTrackEnabled = true
+        this.autoKillTrackUserSet = false
+      }
       applyRaceDocumentTheme(this.race)
       this.hydrated = true
     },
@@ -76,6 +92,8 @@ export const useSettingsStore = defineStore('settings', {
         bossSoundEnabled: this.bossSoundEnabled,
         riftSoundEnabled: this.riftSoundEnabled,
         ttsEnabled: this.ttsEnabled,
+        autoKillTrackEnabled: this.autoKillTrackEnabled,
+        autoKillTrackUserSet: this.autoKillTrackUserSet,
       })
     },
 
@@ -102,6 +120,12 @@ export const useSettingsStore = defineStore('settings', {
 
     setTtsEnabled(value: boolean) {
       this.ttsEnabled = Boolean(value)
+      this.persist()
+    },
+
+    setAutoKillTrackEnabled(value: boolean) {
+      this.autoKillTrackEnabled = Boolean(value)
+      this.autoKillTrackUserSet = true
       this.persist()
     },
   },

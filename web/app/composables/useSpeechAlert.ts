@@ -122,7 +122,7 @@ function ensureVoices() {
 function currentTtsVolume(): number {
   try {
     const settings = useSettingsStore()
-    if (!settings.ttsEnabled) return 0
+    if (!settings.alertsLive || !settings.ttsEnabled) return 0
     return Math.max(0, Math.min(1, settings.alertGain))
   }
   catch {

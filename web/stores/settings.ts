@@ -26,6 +26,11 @@ export const useSettingsStore = defineStore('settings', {
     riftSoundEnabled: true,
     /** Web Speech API voice alerts */
     ttsEnabled: true,
+    /**
+     * Force-mute: blocks sound, voice, and Windows notify without changing other toggles.
+     * Other settings keep their values; this layers on top.
+     */
+    alertsMuted: false,
     /** Auto-start respawn timers from Npcap boss-death capture (Electron only). Default on. */
     autoKillTrackEnabled: true,
     /** Once true, we stop resetting autoKillTrackEnabled to default-on after upgrades. */
@@ -37,9 +42,14 @@ export const useSettingsStore = defineStore('settings', {
     regionId(state): RegionId {
       return regionForRace(state.race)
     },
-    /** Linear gain 0–1 for Web Audio peaks and TTS volume */
+    /** Linear gain 0–1 for Web Audio peaks and TTS volume (0 when force-muted). */
     alertGain(state): number {
+      if (state.alertsMuted) return 0
       return clampVolume(state.alertVolume) / 100
+    },
+    /** False when global mute is on - outbound alerts must no-op. */
+    alertsLive(state): boolean {
+      return !state.alertsMuted
     },
   },
 
@@ -52,6 +62,7 @@ export const useSettingsStore = defineStore('settings', {
         bossSoundEnabled?: boolean
         riftSoundEnabled?: boolean
         ttsEnabled?: boolean
+        alertsMuted?: boolean
         autoKillTrackEnabled?: boolean
         autoKillTrackUserSet?: boolean
       }>('settings')
@@ -69,6 +80,9 @@ export const useSettingsStore = defineStore('settings', {
       }
       if (typeof parsed?.ttsEnabled === 'boolean') {
         this.ttsEnabled = parsed.ttsEnabled
+      }
+      if (typeof parsed?.alertsMuted === 'boolean') {
+        this.alertsMuted = parsed.alertsMuted
       }
       // Older builds wiped "enabled" to false on start races — only honor saved
       // value after the user explicitly toggles (autoKillTrackUserSet).
@@ -92,6 +106,7 @@ export const useSettingsStore = defineStore('settings', {
         bossSoundEnabled: this.bossSoundEnabled,
         riftSoundEnabled: this.riftSoundEnabled,
         ttsEnabled: this.ttsEnabled,
+        alertsMuted: this.alertsMuted,
         autoKillTrackEnabled: this.autoKillTrackEnabled,
         autoKillTrackUserSet: this.autoKillTrackUserSet,
       })
@@ -120,6 +135,12 @@ export const useSettingsStore = defineStore('settings', {
 
     setTtsEnabled(value: boolean) {
       this.ttsEnabled = Boolean(value)
+      this.persist()
+    },
+
+    /** Force mute only - does not flip boss/rift/tts toggles or volume. */
+    setAlertsMuted(value: boolean) {
+      this.alertsMuted = Boolean(value)
       this.persist()
     },
 

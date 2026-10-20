@@ -35,6 +35,7 @@ export default defineNuxtPlugin(() => {
     () => {
       for (const toast of store.toasts) {
         if (lastBossToastIds.has(toast.id)) continue
+        if (!settings.alertsLive) continue
         notifyNative(toast.title, toast.body)
         if (toast.speech) speakAlert(toast.speech)
         if (!settings.bossSoundEnabled) continue
@@ -54,6 +55,7 @@ export default defineNuxtPlugin(() => {
         return
       }
       lastRiftToastKey = key
+      if (!settings.alertsLive) return
       notifyNative(rift.toast.title, rift.toast.body)
       if (rift.toast.speech) speakAlert(rift.toast.speech)
       if (settings.riftSoundEnabled) {
@@ -70,7 +72,7 @@ export default defineNuxtPlugin(() => {
     if (!settings.autoKillTrackEnabled) return
     const def = store.ensureTrackedAndMarkKilled(payload.npcId, settings.regionId)
     if (!def) return
-    notifyNative('Таймер', def.nameRu || def.name)
+    if (settings.alertsLive) notifyNative('Таймер', def.nameRu || def.name)
   })
 
   const offFieldSync = window.aionTracker?.onFieldSync?.((payload) => {

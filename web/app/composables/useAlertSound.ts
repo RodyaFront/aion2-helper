@@ -31,7 +31,9 @@ function getCtx(): AudioContext | null {
 
 function currentGain(): number {
   try {
-    return useSettingsStore().alertGain
+    const settings = useSettingsStore()
+    if (!settings.alertsLive) return 0
+    return settings.alertGain
   }
   catch {
     return 0.8

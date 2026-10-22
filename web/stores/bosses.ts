@@ -9,6 +9,7 @@ import {
   type BossWarnTier,
   warnTierForThreshold,
   bossByNpcId,
+  bossByNpcIdInRegion,
   bossesForRegion,
   type BossRegionId,
   slugify,
@@ -55,6 +56,11 @@ export type FieldSyncOfferEntry = {
   alive: boolean
   respawnAt: number | null
   name: string
+}
+
+export type FieldSyncOffer = {
+  regionId: BossRegionId
+  entries: FieldSyncOfferEntry[]
 }
 
 type RegionsPayload = {
@@ -157,8 +163,8 @@ export const useBossStore = defineStore('bosses', {
     filter: 'all' as FilterMode,
     hydrated: false,
     toasts: [] as TrackerToast[],
-    /** Offer to overwrite timers from the in-game Field Boss list. */
-    pendingFieldSync: null as FieldSyncOfferEntry[] | null,
+    /** Offer to overwrite timers from the in-game Field Boss list (same region only). */
+    pendingFieldSync: null as FieldSyncOffer | null,
   }),
 
   getters: {
@@ -252,6 +258,10 @@ export const useBossStore = defineStore('bosses', {
       this.bosses = this.regions[regionId] ?? seedBosses(regionId)
       if (opts.clearAlerts) {
         this.toasts = []
+      }
+      // Field-sync offer is region-scoped - drop if the tab changed.
+      if (this.pendingFieldSync && this.pendingFieldSync.regionId !== regionId) {
+        this.pendingFieldSync = null
       }
       this.now = Date.now()
       if (opts.persist) this.persist()
@@ -397,9 +407,10 @@ export const useBossStore = defineStore('bosses', {
       raw: Array<{ npcId: number, alive: boolean, respawnAt: number | null }>,
       regionId: BossRegionId,
     ) {
+      // Only bosses of the active app region - never cross-faction (map in game may be the other race).
       const entries: FieldSyncOfferEntry[] = []
       for (const row of raw) {
-        const def = bossByNpcId(row.npcId, regionId)
+        const def = bossByNpcIdInRegion(row.npcId, regionId)
         if (!def) continue
         entries.push({
           npcId: row.npcId,
@@ -408,22 +419,29 @@ export const useBossStore = defineStore('bosses', {
           name: def.nameRu || def.name,
         })
       }
-      if (!entries.length) return
-      // Modal already open: refresh snapshot quietly.
-      this.pendingFieldSync = entries
+      if (!entries.length) {
+        // Other-faction map (or unknown ids): drop any stale offer for this tab.
+        if (this.pendingFieldSync?.regionId === regionId) this.pendingFieldSync = null
+        return
+      }
+      this.pendingFieldSync = { regionId, entries }
     },
 
     dismissFieldSync() {
       this.pendingFieldSync = null
     },
 
-    /** Overwrite all offered timers from the game list. */
+    /** Overwrite timers from the game list for the region that was offered. */
     applyPendingFieldSync() {
       const offer = this.pendingFieldSync
-      if (!offer?.length) return
+      if (!offer?.entries.length) return
+      if (offer.regionId !== this.regionId) {
+        this.pendingFieldSync = null
+        return
+      }
       const now = Date.now()
-      for (const row of offer) {
-        const def = this.ensureTracked(row.npcId, this.regionId)
+      for (const row of offer.entries) {
+        const def = bossByNpcIdInRegion(row.npcId, this.regionId)
         if (!def) continue
         const boss = this.bosses.find((b) => b.id === def.id)
         if (!boss) continue

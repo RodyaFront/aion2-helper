@@ -17,3 +17,11 @@ Regenerate and validate:
 npm run sounds:generate
 npm run sounds:validate
 ```
+
+# Rift bed
+
+| File | Role | Source |
+|------|------|--------|
+| `rift-riser-bed.ogg` | Bed under rift TTS (~60% of voice gain) | [Sub bass riser.wav](https://freesound.org/people/MarwanAntonios/sounds/436581/) by [MarwanAntonios](https://freesound.org/people/MarwanAntonios/) |
+
+License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Converted from the Freesound HQ preview to Ogg Vorbis for the app.

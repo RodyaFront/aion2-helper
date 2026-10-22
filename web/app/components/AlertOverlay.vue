@@ -7,7 +7,7 @@ import { useRiftStore } from '../../stores/rift'
 const store = useBossStore()
 const rift = useRiftStore()
 
-const fieldSyncEntries = computed(() => store.pendingFieldSync ?? [])
+const fieldSyncEntries = computed(() => store.pendingFieldSync?.entries ?? [])
 const fieldSyncCount = computed(() => fieldSyncEntries.value.length)
 
 const hasToasts = computed(() =>

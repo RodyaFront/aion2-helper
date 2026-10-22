@@ -57,11 +57,11 @@ export default defineNuxtPlugin(() => {
       lastRiftToastKey = key
       if (!settings.alertsLive) return
       notifyNative(rift.toast.title, rift.toast.body)
+      // Banner mute (riftSoundEnabled) silences both bed SFX and rift voice.
+      if (!settings.riftSoundEnabled) return
       if (rift.toast.speech) speakAlert(rift.toast.speech)
-      if (settings.riftSoundEnabled) {
-        if (rift.toast.kind === 'warn') playRiftWarn()
-        else playRiftAlert()
-      }
+      if (rift.toast.kind === 'warn') playRiftWarn()
+      else playRiftAlert()
     },
   )
 

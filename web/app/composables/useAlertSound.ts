@@ -9,6 +9,11 @@ const SAMPLE_URLS: Record<BossWarnTier, string> = {
   alert: '/sounds/boss-alert.ogg',
 }
 
+/** Bed under rift TTS — ~60% of voice (alertGain). */
+const RIFT_BED_URL = '/sounds/rift-riser-bed.ogg'
+/** Relative to alertGain / TTS volume. */
+const RIFT_BED_PEAK = 0.6
+
 /** Runtime peaks aligned to urgency brief (files already laddered). */
 const TIER_PEAK: Record<BossWarnTier, number> = {
   ping: 0.5,
@@ -143,6 +148,7 @@ export function useAlertSound() {
     for (const url of Object.values(SAMPLE_URLS)) {
       void loadBuffer(url)
     }
+    void loadBuffer(RIFT_BED_URL)
   }
 
   async function playBossWarn(tier: BossWarnTier = 'ping') {
@@ -160,33 +166,30 @@ export function useAlertSound() {
     void playBossWarn('ping')
   }
 
-  function playRiftWarn() {
+  /** Sub-bass riser bed under rift voice (CC-BY MarwanAntonios). */
+  async function playRiftBed() {
     if (currentGain() <= 0) return
+    const buf = await loadBuffer(RIFT_BED_URL)
+    if (buf) {
+      playBuffer(buf, RIFT_BED_PEAK)
+      return
+    }
+    // Fallback if sample missing: short low swell.
     const audio = getCtx()
     if (!audio) return
     void audio.resume()
     const now = audio.currentTime
-    ;[220, 277].forEach((freq, i) => {
-      tone(audio, freq, now + i * 0.2, 0.32, 0.09, 'sine')
+    ;[196, 247].forEach((freq, i) => {
+      tone(audio, freq, now + i * 0.2, 0.4, 0.08, 'sine')
     })
   }
 
+  function playRiftWarn() {
+    void playRiftBed()
+  }
+
   function playRiftAlert() {
-    if (currentGain() <= 0) return
-    const audio = getCtx()
-    if (!audio) return
-    void audio.resume()
-    const now = audio.currentTime
-    const notes: Array<[number, number, number]> = [
-      [196, 0, 0.55],
-      [247, 0.18, 0.55],
-      [311, 0.36, 0.7],
-      [392, 0.52, 0.45],
-    ]
-    for (const [freq, offset, dur] of notes) {
-      tone(audio, freq, now + offset, dur, 0.1, 'sine')
-      tone(audio, freq * 2, now + offset + 0.04, dur * 0.7, 0.035, 'triangle')
-    }
+    void playRiftBed()
   }
 
   return {

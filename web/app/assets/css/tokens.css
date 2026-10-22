@@ -57,11 +57,11 @@
   --color-bg-fallback-a: #243040;
   --color-bg-fallback-b: #121820;
   --color-bg-toast: #1a222c;
-  /* Rift banner plate (matches portal art; not race-tinted) */
-  --color-bg-rift: #0d0f16;
+  /* Rift banner plate — same family as cards (CSS orb; no PNG plate match) */
+  --color-bg-rift: var(--color-bg-card);
   --color-rift-open: #ff5a2a;
   --color-rift-open-text: #ffc4a8;
-  --color-rift-open-soft: color-mix(in srgb, #ff5a2a 8%, #0d0f16);
+  --color-rift-open-soft: color-mix(in srgb, #ff5a2a 8%, var(--color-bg-rift));
   --color-rift-dot-idle: #7a879e;
   --color-line: #2a3644;
   --color-line-soft: #1e2834;

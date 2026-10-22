@@ -2139,23 +2139,215 @@ img {
   height: 3.25rem;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: var(--color-bg-rift);
+  /* Same plate as banner — no separate black tile (was PNG plate match). */
+  background: transparent;
   flex-shrink: 0;
+  display: grid;
+  place-items: center;
 }
 
-.rift-banner-art {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(1.2);
-  user-select: none;
-  opacity: 0.7;
+/* Silhouette eclipse: flat black disk + crimson corona (match portal.webp) */
+.rift-orb {
+  position: relative;
+  width: 2.35rem;
+  height: 2.35rem;
+  opacity: 0.55;
   transition: opacity 0.25s ease;
+  filter: saturate(0.75);
 }
 
-.rift-banner.is-portal .rift-banner-art,
-.rift-banner.is-in-event .rift-banner-art {
+.rift-banner.is-portal .rift-orb,
+.rift-banner.is-in-event .rift-orb {
   opacity: 1;
+  filter: none;
+}
+
+.rift-banner.is-muted .rift-orb {
+  opacity: 0.4;
+  filter: grayscale(0.4) brightness(0.8);
+}
+
+.rift-orb > span {
+  position: absolute;
+  pointer-events: none;
+}
+
+.rift-orb-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Full-circumference crimson bloom, denser top-left */
+.rift-orb-corona {
+  inset: -20%;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 38% 34%,
+      transparent 46%,
+      color-mix(in srgb, #e02012 75%, transparent) 58%,
+      color-mix(in srgb, #7a0a08 40%, transparent) 70%,
+      transparent 84%
+    ),
+    radial-gradient(
+      circle at 55% 55%,
+      transparent 50%,
+      color-mix(in srgb, #a01008 45%, transparent) 64%,
+      transparent 80%
+    );
+  filter: url(#rift-corona-noise) blur(0.05rem);
+  opacity: 0.95;
+  animation: rift-orb-corona 3.4s ease-in-out infinite;
+}
+
+.rift-orb-wisp {
+  border-radius: 50%;
+  filter: url(#rift-corona-noise) blur(0.045rem);
+  opacity: 0.9;
+}
+
+.rift-orb-wisp-a {
+  width: 62%;
+  height: 26%;
+  left: 6%;
+  top: 2%;
+  background: radial-gradient(
+    ellipse at 50% 70%,
+    color-mix(in srgb, #ff2a12 90%, transparent) 0%,
+    color-mix(in srgb, #c01808 55%, transparent) 38%,
+    transparent 70%
+  );
+  transform: rotate(-30deg);
+}
+
+.rift-orb-wisp-b {
+  width: 30%;
+  height: 55%;
+  left: -10%;
+  top: 20%;
+  background: radial-gradient(
+    ellipse at 80% 45%,
+    color-mix(in srgb, #ff2a12 75%, transparent) 0%,
+    color-mix(in srgb, #8b0a0a 45%, transparent) 45%,
+    transparent 72%
+  );
+  transform: rotate(6deg);
+  opacity: 0.8;
+}
+
+.rift-orb-wisp-c {
+  width: 34%;
+  height: 20%;
+  right: 2%;
+  top: 14%;
+  left: auto;
+  background: radial-gradient(
+    ellipse at 30% 55%,
+    color-mix(in srgb, #d01810 55%, transparent) 0%,
+    color-mix(in srgb, #6a0808 30%, transparent) 48%,
+    transparent 72%
+  );
+  transform: rotate(20deg);
+  opacity: 0.55;
+}
+
+.rift-orb-wisp-d {
+  width: 38%;
+  height: 16%;
+  left: 30%;
+  bottom: 4%;
+  top: auto;
+  background: radial-gradient(
+    ellipse at 50% 25%,
+    color-mix(in srgb, #8b0a0a 40%, transparent) 0%,
+    transparent 68%
+  );
+  transform: rotate(-6deg);
+  opacity: 0.4;
+}
+
+/* Soft outer echo, no hard second disk */
+.rift-orb-echo {
+  width: 24%;
+  height: 24%;
+  left: -12%;
+  top: -8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 65% 65%,
+    transparent 55%,
+    color-mix(in srgb, #c01808 40%, transparent) 72%,
+    transparent 92%
+  );
+  opacity: 0.3;
+  filter: url(#rift-corona-noise) blur(0.06rem);
+}
+
+.rift-orb-rim {
+  inset: 17%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 42% 38%,
+    transparent 70%,
+    #ff3a18 77%,
+    #a01008 86%,
+    transparent 94%
+  );
+  box-shadow: 0 0 0.12rem color-mix(in srgb, #ff2a12 40%, transparent);
+}
+
+.rift-orb-disk {
+  inset: 20%;
+  border-radius: 50%;
+  background: #000;
+}
+
+/* Rim brightening only — no yellow star */
+.rift-orb-hotspot {
+  width: 20%;
+  height: 11%;
+  left: 16%;
+  top: 15%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 45% 55%,
+    color-mix(in srgb, #ffe0c0 70%, transparent) 0%,
+    color-mix(in srgb, #ff4a1a 80%, transparent) 35%,
+    color-mix(in srgb, #c01808 40%, transparent) 60%,
+    transparent 82%
+  );
+  opacity: 0.7;
+  mix-blend-mode: screen;
+  filter: blur(0.05rem);
+  transform: rotate(-36deg);
+  animation: rift-orb-hotspot 3.4s ease-in-out infinite;
+}
+
+.rift-banner.is-idle .rift-orb-corona,
+.rift-banner.is-idle .rift-orb-hotspot {
+  animation: none;
+}
+
+@keyframes rift-orb-corona {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes rift-orb-hotspot {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 0.95;
+  }
 }
 
 .rift-banner-body {
@@ -2357,8 +2549,13 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rift-banner-art {
+  .rift-orb {
     transition: none;
+  }
+
+  .rift-orb-corona,
+  .rift-orb-hotspot {
+    animation: none !important;
   }
 
   .rift-banner-schedule-chevron {

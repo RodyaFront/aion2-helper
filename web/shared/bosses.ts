@@ -83,10 +83,16 @@ export function bossesForRegion(regionId: BossRegionId): BossDef[] {
   return regionId === 'altgard' ? ALTGARD_BOSSES : VERTERON_BOSSES
 }
 
+/** Resolve a packet NPC id only within one region (no cross-faction fallback). */
+export function bossByNpcIdInRegion(npcId: number, regionId: BossRegionId): BossDef | undefined {
+  if (!Number.isFinite(npcId)) return undefined
+  return bossesForRegion(regionId).find((b) => b.npcIds?.includes(npcId))
+}
+
 /** Resolve a packet NPC id to a catalog boss for the active region (then any region). */
 export function bossByNpcId(npcId: number, regionId: BossRegionId): BossDef | undefined {
   if (!Number.isFinite(npcId)) return undefined
-  return bossesForRegion(regionId).find((b) => b.npcIds?.includes(npcId))
+  return bossByNpcIdInRegion(npcId, regionId)
     ?? VERTERON_BOSSES.find((b) => b.npcIds?.includes(npcId))
     ?? ALTGARD_BOSSES.find((b) => b.npcIds?.includes(npcId))
 }

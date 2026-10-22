@@ -27,6 +27,8 @@ export interface BossState {
   image: string
   custom: boolean
   favorite: boolean
+  /** Opt-in: toast / Windows / sound / speech only when true */
+  alertSubscribed: boolean
   respawnAt: number | null
   firedAlerts: AlertThreshold[]
 }
@@ -71,6 +73,7 @@ function seedBosses(regionId: BossRegionId): BossState[] {
     image: b.image,
     custom: false,
     favorite: false,
+    alertSubscribed: false,
     respawnAt: null,
     firedAlerts: [],
   }))
@@ -89,6 +92,7 @@ function mergeWithSeed(list: BossState[], regionId: BossRegionId): BossState[] {
       nameRu: def?.nameRu ?? b.nameRu ?? '',
       locationRu: def?.locationRu ?? b.locationRu ?? '',
       favorite: Boolean(b.favorite),
+      alertSubscribed: Boolean(b.alertSubscribed),
       firedAlerts: normalizeFiredAlerts(b.firedAlerts),
     }
   })
@@ -301,6 +305,7 @@ export const useBossStore = defineStore('bosses', {
     },
 
     pushAlert(boss: BossState, threshold: AlertThreshold) {
+      if (!boss.alertSubscribed) return
       const kind: ToastKind = threshold === READY_ALERT ? 'ready' : 'warn'
       const warnTier = threshold === READY_ALERT
         ? undefined
@@ -370,6 +375,7 @@ export const useBossStore = defineStore('bosses', {
             image: def.image,
             custom: false,
             favorite: false,
+            alertSubscribed: false,
             respawnAt: null,
             firedAlerts: [],
           },
@@ -498,6 +504,7 @@ export const useBossStore = defineStore('bosses', {
           image: '',
           custom: true,
           favorite: false,
+          alertSubscribed: false,
           respawnAt: null,
           firedAlerts: [],
         },
@@ -511,6 +518,16 @@ export const useBossStore = defineStore('bosses', {
       this.bosses = replaceBoss(this.bosses, id, {
         ...boss,
         favorite: !boss.favorite,
+      })
+      this.persist()
+    },
+
+    toggleAlertSubscribe(id: string) {
+      const boss = this.bosses.find((b) => b.id === id)
+      if (!boss) return
+      this.bosses = replaceBoss(this.bosses, id, {
+        ...boss,
+        alertSubscribed: !boss.alertSubscribed,
       })
       this.persist()
     },

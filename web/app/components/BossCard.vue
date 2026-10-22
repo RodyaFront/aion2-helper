@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bookmark, MapPinned, RotateCcw, Trash2 } from '@lucide/vue'
+import { Bell, BellOff, Bookmark, MapPinned, RotateCcw, Trash2 } from '@lucide/vue'
 import { formatCountdown, formatInterval, parseHms, splitMinutes } from '../../shared/bosses'
 import { getBossCoord } from '../../shared/map/regions'
 import { useBossStore, type BossState } from '../../stores/bosses'
@@ -169,18 +169,42 @@ function toggle(kind: 'custom' | 'interval') {
               {{ boss.nameRu }}
             </p>
           </div>
-          <UiAppTooltip :content="boss.favorite ? 'Убрать из избранного' : 'В избранное'">
-            <button
-              type="button"
-              class="btn btn-icon btn-sm btn-ghost fav-btn"
-              :class="{ 'is-on': boss.favorite }"
-              :aria-pressed="boss.favorite"
-              :aria-label="boss.favorite ? 'Убрать из избранного' : 'В избранное'"
-              @click="store.toggleFavorite(boss.id)"
-            >
-              <Bookmark class="ui-icon" aria-hidden="true" :fill="boss.favorite ? 'currentColor' : 'none'" />
-            </button>
-          </UiAppTooltip>
+          <div class="boss-meta-actions">
+            <UiAppTooltip :content="boss.alertSubscribed ? 'Не оповещать' : 'Оповещать'">
+              <button
+                type="button"
+                class="btn btn-icon btn-sm btn-ghost notify-btn"
+                :class="{ 'is-on': boss.alertSubscribed }"
+                :aria-pressed="boss.alertSubscribed"
+                :aria-label="boss.alertSubscribed ? 'Не оповещать' : 'Оповещать'"
+                @click="store.toggleAlertSubscribe(boss.id)"
+              >
+                <Bell
+                  v-if="boss.alertSubscribed"
+                  class="ui-icon"
+                  aria-hidden="true"
+                  fill="currentColor"
+                />
+                <BellOff
+                  v-else
+                  class="ui-icon"
+                  aria-hidden="true"
+                />
+              </button>
+            </UiAppTooltip>
+            <UiAppTooltip :content="boss.favorite ? 'Убрать из избранного' : 'В избранное'">
+              <button
+                type="button"
+                class="btn btn-icon btn-sm btn-ghost fav-btn"
+                :class="{ 'is-on': boss.favorite }"
+                :aria-pressed="boss.favorite"
+                :aria-label="boss.favorite ? 'Убрать из избранного' : 'В избранное'"
+                @click="store.toggleFavorite(boss.id)"
+              >
+                <Bookmark class="ui-icon" aria-hidden="true" :fill="boss.favorite ? 'currentColor' : 'none'" />
+              </button>
+            </UiAppTooltip>
+          </div>
         </div>
         <span class="status-chip" :class="`is-${status}`">{{ statusLabel }}</span>
         <p class="loc">

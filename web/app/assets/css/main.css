@@ -1727,7 +1727,15 @@ img {
   min-width: 0;
 }
 
-.fav-btn {
+.boss-meta-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.fav-btn,
+.notify-btn {
   flex-shrink: 0;
   width: 1.75rem;
   height: 1.75rem;
@@ -1742,6 +1750,12 @@ img {
 .fav-btn.is-on:hover,
 .fav-btn.is-on:active {
   color: var(--color-warn, #c9a227);
+}
+
+.notify-btn.is-on,
+.notify-btn.is-on:hover,
+.notify-btn.is-on:active {
+  color: var(--color-active);
 }
 
 .boss-title-block {
@@ -1942,7 +1956,12 @@ img {
   z-index: 80;
   display: grid;
   gap: var(--space-2);
-  width: min(22rem, calc(100vw - var(--space-8)));
+  width: min(26rem, calc(100vw - var(--space-8)));
+}
+
+.toast-stack > .toast:not(.field-sync-card) {
+  width: min(22rem, 100%);
+  justify-self: end;
 }
 
 .toast {
@@ -1968,8 +1987,105 @@ img {
   border-left-color: var(--color-warn);
 }
 
-.toast.is-field-sync {
-  border-left-color: var(--color-info);
+.toast.is-field-sync.field-sync-card {
+  display: flex;
+  flex-direction: column;
+  width: min(26rem, calc(100vw - var(--space-8)));
+  max-height: min(28rem, 70vh);
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-left: 1px solid var(--color-line);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+
+.field-sync-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--color-line-soft);
+}
+
+.field-sync-heading {
+  min-width: 0;
+}
+
+.field-sync-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+
+.field-sync-desc {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.field-sync-close {
+  flex-shrink: 0;
+}
+
+.field-sync-body {
+  padding: var(--space-3) var(--space-4);
+  overflow: auto;
+  min-height: 0;
+}
+
+.field-sync-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.field-sync-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-soft);
+}
+
+.field-sync-name {
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field-sync-status {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.field-sync-status.is-ready {
+  color: var(--color-ready);
+  font-weight: 600;
+}
+
+.field-sync-footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--color-line-soft);
 }
 
 .toast-scrim {
@@ -2693,6 +2809,19 @@ img {
   image-rendering: auto;
 }
 
+/* Screen-space chip layer: not inside the scaled tile stage (keeps % badges crisp). */
+.boss-map-markers {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.boss-map-markers .boss-map-marker {
+  pointer-events: auto;
+}
+
 .boss-map-marker {
   position: absolute;
   /* z-index set inline: higher drop % paints above */
@@ -2820,6 +2949,8 @@ img {
   font-weight: 750;
   line-height: 1;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
 }
 
 /** ×N: count color, no fill; single outline for map contrast. */

@@ -44,7 +44,7 @@ type StackLayout = {
   size: number
   /** 0 = highest rate (on top). */
   rank: number
-  /** Screen-px translateY after inverse scale; 0 for top. */
+  /** Screen-px translateY for deck peek; 0 for top. */
   fanDy: number
   /** Shared map anchor so the deck has no horizontal drift. */
   anchorX: number
@@ -495,7 +495,7 @@ function collapseSpiderfy() {
 }
 
 function markerStyle(marker: IMapMarker) {
-  const inv = 1 / Math.max(scale.value, 0.0001)
+  // Screen-space overlay (not inside the scaled tile stage) so text stays crisp at any zoom.
   const anchor = marker.kind === 'pin' ? '-50%, -100%' : '-50%, -50%'
   const model = markerModel(marker)
   const layout = stackLayoutById.value.get(marker.id)
@@ -504,6 +504,9 @@ function markerStyle(marker: IMapMarker) {
   const useDeck = Boolean(layout && layout.size > 1 && !spiderfied)
   const mapX = useDeck ? layout!.anchorX : p.mapX
   const mapY = useDeck ? layout!.anchorY : p.mapY
+  const s = scale.value
+  const screenX = panX.value + mapX * s
+  const screenY = panY.value + mapY * s
   const inStack = stackMemberIds.value.has(marker.id)
   const dimmed = Boolean(
     (hoveredMarkerId.value || focusMarkerId.value)
@@ -514,8 +517,8 @@ function markerStyle(marker: IMapMarker) {
   const highlight = focusMarkerId.value === marker.id || hoveredMarkerId.value === marker.id
   const fanDy = useDeck ? layout!.fanDy : 0
   const transform = fanDy
-    ? `translate(${anchor}) scale(${inv}) translateY(${fanDy}px)`
-    : `translate(${anchor}) scale(${inv})`
+    ? `translate(${anchor}) translateY(${fanDy}px)`
+    : `translate(${anchor})`
   const mobCount = markerMobCount(marker)
   let z = model.bossExclusive ? 4 : 2
   if (useDeck) {
@@ -537,8 +540,8 @@ function markerStyle(marker: IMapMarker) {
   }
 
   return {
-    left: `${mapX}px`,
-    top: `${mapY}px`,
+    left: `${screenX}px`,
+    top: `${screenY}px`,
     transform,
     opacity: dimmed ? 0.3 : 1,
     zIndex: z,
@@ -729,6 +732,9 @@ watch(
             height: `${tile.size}px`,
           }"
         >
+      </div>
+
+      <div class="boss-map-markers">
         <div
           v-for="marker in markersForRender"
           :key="marker.id"

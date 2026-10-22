@@ -2139,8 +2139,8 @@ img {
   height: 3.25rem;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 80% 70% at 45% 55%, #1a120e 0%, var(--color-bg-rift) 70%);
+  /* Same plate as banner — no separate black tile (was PNG plate match). */
+  background: transparent;
   flex-shrink: 0;
   display: grid;
   place-items: center;

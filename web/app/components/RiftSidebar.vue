@@ -38,7 +38,7 @@ const scheduleHours = RIFT_UTC_HOURS.map((h) => `${String(h).padStart(2, '0')}:0
 const soundOn = computed(() => settings.riftSoundEnabled)
 
 const muteLabel = computed(() =>
-  soundOn.value ? 'Выключить звук разлома' : 'Включить звук разлома',
+  soundOn.value ? 'Выключить оповещения разлома' : 'Включить оповещения разлома',
 )
 
 function toggleRiftSound() {
@@ -61,15 +61,47 @@ function toggleRiftSound() {
       class="rift-banner-visual"
       aria-hidden="true"
     >
-      <img
-        class="rift-banner-art"
-        src="/rift/portal.webp?v=7"
-        alt=""
-        width="128"
-        height="128"
-        decoding="async"
-        draggable="false"
-      >
+      <div class="rift-orb">
+        <svg
+          class="rift-orb-filters"
+          width="0"
+          height="0"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <filter
+            id="rift-corona-noise"
+            x="-40%"
+            y="-40%"
+            width="180%"
+            height="180%"
+          >
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="1.1"
+              numOctaves="4"
+              seed="7"
+              result="noise"
+            />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="noise"
+              scale="12"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+        </svg>
+        <span class="rift-orb-corona" />
+        <span class="rift-orb-wisp rift-orb-wisp-a" />
+        <span class="rift-orb-wisp rift-orb-wisp-b" />
+        <span class="rift-orb-wisp rift-orb-wisp-c" />
+        <span class="rift-orb-wisp rift-orb-wisp-d" />
+        <span class="rift-orb-echo" />
+        <span class="rift-orb-rim" />
+        <span class="rift-orb-disk" />
+        <span class="rift-orb-hotspot" />
+      </div>
     </div>
 
     <button

@@ -1,9 +1,12 @@
 import { watch } from 'vue'
 import { notifyNative } from '../../shared/notify'
 import { applyRaceDocumentTheme } from '../../shared/race'
+import { ensureItemCatalog } from '../../shared/items/catalog'
+import type { SessionCapturePayload } from '../../shared/session/types'
 import { useBossStore } from '../../stores/bosses'
 import { useFavoritesStore } from '../../stores/favorites'
 import { useRiftStore } from '../../stores/rift'
+import { useSessionStore } from '../../stores/session'
 import { useSettingsStore } from '../../stores/settings'
 import { useAlertSound } from '../composables/useAlertSound'
 import { useSpeechAlert } from '../composables/useSpeechAlert'
@@ -13,6 +16,7 @@ export default defineNuxtPlugin(() => {
   const rift = useRiftStore()
   const settings = useSettingsStore()
   const favorites = useFavoritesStore()
+  const session = useSessionStore()
   const { unlockAudio, playBossWarn, playRiftWarn, playRiftAlert } = useAlertSound()
   const { speakAlert, ensureVoices } = useSpeechAlert()
 
@@ -70,9 +74,8 @@ export default defineNuxtPlugin(() => {
   const offBossKill = window.aionTracker?.onBossKill?.((payload) => {
     if (!store.hydrated || !settings.hydrated) return
     if (!settings.autoKillTrackEnabled) return
-    const def = store.ensureTrackedAndMarkKilled(payload.npcId, settings.regionId)
-    if (!def) return
-    if (settings.alertsLive) notifyNative('Таймер', def.nameRu || def.name)
+    // Start/reset timer silently — alerts are only respawn warnings from store.toasts.
+    store.ensureTrackedAndMarkKilled(payload.npcId, settings.regionId)
   })
 
   const offFieldSync = window.aionTracker?.onFieldSync?.((payload) => {
@@ -80,6 +83,11 @@ export default defineNuxtPlugin(() => {
     if (!settings.autoKillTrackEnabled) return
     if (!payload?.bosses?.length) return
     store.offerFieldSync(payload.bosses, settings.regionId)
+  })
+
+  const offSessionEvent = window.aionTracker?.onSessionEvent?.((payload) => {
+    if (!session.hydrated || !payload?.type) return
+    session.applyCapture(payload as SessionCapturePayload)
   })
 
   let timer: ReturnType<typeof setInterval> | undefined
@@ -98,6 +106,10 @@ export default defineNuxtPlugin(() => {
   void (async () => {
     await settings.hydrate()
     await favorites.hydrate()
+    await session.hydrate()
+    void ensureItemCatalog().then(() => {
+      session.enrichFromCatalog()
+    }).catch(() => {})
     await store.hydrate()
     store.setRegion(settings.regionId)
     store.query = ''
@@ -126,6 +138,7 @@ export default defineNuxtPlugin(() => {
     if (store.hydrated) store.persist()
     if (settings.hydrated) settings.persist()
     if (favorites.hydrated) favorites.persist()
+    if (session.hydrated) session.persist()
   }
   window.addEventListener('pagehide', flush)
   window.addEventListener('beforeunload', flush)
@@ -136,6 +149,7 @@ export default defineNuxtPlugin(() => {
       offFocus?.()
       offBossKill?.()
       offFieldSync?.()
+      offSessionEvent?.()
       window.removeEventListener('pagehide', flush)
       window.removeEventListener('beforeunload', flush)
     })

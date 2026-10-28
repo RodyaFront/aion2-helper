@@ -32,14 +32,28 @@ export type FieldSyncPayload = {
   bosses: FieldSyncEntry[]
 }
 
+export type SessionEventPayload = {
+  type: 'loot' | 'inventory' | 'mob_kill'
+  at?: number
+  itemId?: number
+  count?: number
+  quantity?: number
+  kind?: number
+  zone?: number
+  npcId?: number
+  entityId?: number
+  own?: boolean
+  name?: string | null
+}
+
 export interface AionTrackerBridge {
   notify: (payload: { title: string, body: string }) => void
   /** Windows SAPI; used for EN names when Chromium getVoices() is empty. */
   speak?: (payload: { text: string, lang: string, volume: number }) => Promise<boolean>
   stopSpeak?: () => void
   onFocusApp: (handler: () => void) => () => void
-  loadState: (key: 'bosses' | 'settings' | 'favorites') => Promise<unknown>
-  saveState: (key: 'bosses' | 'settings' | 'favorites', data: unknown) => Promise<void>
+  loadState: (key: 'bosses' | 'settings' | 'favorites' | 'sessions') => Promise<unknown>
+  saveState: (key: 'bosses' | 'settings' | 'favorites' | 'sessions', data: unknown) => Promise<void>
   detectNpcap?: () => Promise<NpcapDetectResult>
   getAutoKillStatus?: () => Promise<AutoKillStatusPayload>
   setAutoKillTrack?: (enabled: boolean) => Promise<AutoKillStatusPayload>
@@ -47,6 +61,7 @@ export interface AionTrackerBridge {
   ensureAutoKillTrack?: () => Promise<AutoKillStatusPayload & { detect?: NpcapDetectResult }>
   onBossKill?: (handler: (payload: BossKillPayload) => void) => () => void
   onFieldSync?: (handler: (payload: FieldSyncPayload) => void) => () => void
+  onSessionEvent?: (handler: (payload: SessionEventPayload) => void) => () => void
   onAutoKillStatus?: (handler: (payload: AutoKillStatusPayload) => void) => () => void
   openExternal?: (url: string) => Promise<boolean>
 }

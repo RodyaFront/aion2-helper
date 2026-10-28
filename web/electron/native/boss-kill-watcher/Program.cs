@@ -8,7 +8,7 @@ using AionDPS.Combat.Sources;
 namespace BossKillWatcher;
 
 /// <summary>
-/// Death-only Npcap sidecar for Aion Boss Tracker.
+/// Npcap sidecar for Aion Boss Tracker: field-boss deaths + session capture events.
 /// Adapted from SkeeveAN/Aion-DPS-Meter (MIT) — see NOTICE.md / NOTICE-SkeeveAN.txt.
 /// Stdout: one JSON object per line.
 /// </summary>
@@ -27,6 +27,9 @@ internal static class Program
         2400659, 2400709, 2400800, 2400853, 2400854, 2400855,
     ];
 
+    /// <summary>Own-damage window for mob_kill attribution (matches SESSION_RULES.killDamageWindowSec).</summary>
+    private static readonly TimeSpan KillDamageWindow = TimeSpan.FromSeconds(12);
+
     private static int Main(string[] args)
     {
         // Vendored protocol code resolves assets via AppContext.BaseDirectory — keep cwd/exe aligned.
@@ -44,7 +47,8 @@ internal static class Program
         return mode switch
         {
             "detect" or "--detect" => RunDetect(),
-            "watch" or "--watch" => RunWatch(),
+            "watch" or "--watch" => RunWatch(verboseCalib: false),
+            "calib" or "--calib" => RunWatch(verboseCalib: true),
             "help" or "--help" or "-h" => PrintHelp(),
             _ => Fail($"unknown mode: {mode}"),
         };
@@ -52,9 +56,10 @@ internal static class Program
 
     private static int PrintHelp()
     {
-        Console.Error.WriteLine("boss-kill-watcher detect|watch");
+        Console.Error.WriteLine("boss-kill-watcher detect|watch|calib");
         Console.Error.WriteLine("  detect  — check Npcap install (JSON on stdout)");
-        Console.Error.WriteLine("  watch   — capture game traffic; emit {\"npcId\":…,\"at\":…} on each known field-boss death");
+        Console.Error.WriteLine("  watch   — field-boss deaths + session events (loot/inventory/mob_kill)");
+        Console.Error.WriteLine("  calib   — same as watch, plus type=calib lines for inventory/loot/kill");
         return 0;
     }
 
@@ -71,7 +76,7 @@ internal static class Program
         return npcap.IsInstalled ? 0 : 2;
     }
 
-    private static int RunWatch()
+    private static int RunWatch(bool verboseCalib)
     {
         NpcapAvailability npcap = NpcapAvailability.Detect();
         if (!npcap.IsInstalled)
@@ -100,6 +105,9 @@ internal static class Program
         // Packet timestamps are local (SharpPcap Timeval → ToLocalTime). Must poll with DateTime.Now,
         // not UtcNow — otherwise deaths fall outside the window (e.g. UTC+3).
         DateTime cursor = DateTime.Now.AddMinutes(-1);
+
+        // entityId → last time local player dealt damage to it
+        var recentHits = new Dictionary<int, DateTime>();
 
         // Field-boss list (opcode 01 91): deaths on value change; timer sync when the tab is (re)opened.
         var fieldAlive = new Dictionary<int, bool>();
@@ -224,13 +232,69 @@ internal static class Program
         Aion2FieldBosses.Changed += EmitFieldDeaths;
         Aion2FieldBosses.ListReceived += EmitFieldSyncIfReopen;
 
+        Aion2Loot.PickedUp += (itemId, count, at, zone) =>
+        {
+            Write(new
+            {
+                type = "loot",
+                itemId,
+                count,
+                zone,
+                at = new DateTimeOffset(at).ToUnixTimeMilliseconds(),
+            });
+            if (verboseCalib)
+            {
+                Write(new
+                {
+                    type = "calib",
+                    eventKind = "loot",
+                    itemId,
+                    count,
+                    zone,
+                    at = new DateTimeOffset(at).ToUnixTimeMilliseconds(),
+                });
+            }
+        };
+
+        Aion2Loot.InventoryChanged += (itemId, kind, quantity, at) =>
+        {
+            Write(new
+            {
+                type = "inventory",
+                itemId,
+                kind,
+                quantity,
+                at = new DateTimeOffset(at).ToUnixTimeMilliseconds(),
+            });
+            if (verboseCalib)
+            {
+                Write(new
+                {
+                    type = "calib",
+                    eventKind = "inventory",
+                    itemId,
+                    kind,
+                    quantity,
+                    at = new DateTimeOffset(at).ToUnixTimeMilliseconds(),
+                });
+            }
+        };
+
         source.StatusChanged += status =>
         {
             Write(new { type = "status", status = status.State.ToString().ToLowerInvariant(), message = status.Message });
         };
 
         source.Start();
-        Write(new { type = "status", status = "listening", message = "Npcap capture started", whitelist = whitelist.Count });
+        Write(new
+        {
+            type = "status",
+            status = "listening",
+            message = verboseCalib ? "Npcap capture started (calib)" : "Npcap capture started",
+            whitelist = whitelist.Count,
+            session = true,
+            calib = verboseCalib,
+        });
 
         using var cts = new CancellationTokenSource();
         Console.CancelKeyPress += (_, e) =>
@@ -243,8 +307,32 @@ internal static class Program
         {
             while (!cts.IsCancellationRequested)
             {
-                _ = source.Poll(paused: false);
+                CombatBatch batch = source.Poll(paused: false);
                 DateTime now = DateTime.Now;
+                int localId = entities.LocalPlayerId;
+
+                foreach (DamageEvent dmg in batch.Damage)
+                {
+                    if (dmg.IsHeal || dmg.Amount <= 0)
+                    {
+                        continue;
+                    }
+
+                    // Own hits include the local player's summons (pets / totems).
+                    if (localId >= 0 && IsOwnDamageSource(entities, dmg.SourceObjectId))
+                    {
+                        recentHits[dmg.TargetObjectId] = dmg.Timestamp;
+                    }
+                }
+
+                if (recentHits.Count > 4000)
+                {
+                    foreach (int stale in recentHits.Where(kv => now - kv.Value > TimeSpan.FromMinutes(2)).Select(kv => kv.Key).ToList())
+                    {
+                        recentHits.Remove(stale);
+                    }
+                }
+
                 List<DeathRecord> deaths = entities.Combat.DeathsIn(cursor, now);
                 foreach (DeathRecord death in deaths)
                 {
@@ -254,20 +342,59 @@ internal static class Program
                         continue;
                     }
 
-                    int? npcId = entities.NpcIdOf(death.Entity) ?? entities.BossNpcIdOf(death.Entity);
-                    if (npcId is not int id || !whitelist.Contains(id))
+                    if (entities.IsKnownPlayer(death.Entity) || entities.IsLocalPlayer(death.Entity))
                     {
                         continue;
                     }
 
-                    Write(new
+                    int? npcId = entities.NpcIdOf(death.Entity) ?? entities.BossNpcIdOf(death.Entity);
+                    if (npcId is not int id)
                     {
-                        type = "death",
-                        npcId = id,
-                        entityId = death.Entity,
-                        at = new DateTimeOffset(death.At).ToUnixTimeMilliseconds(),
-                        source = "hp",
-                    });
+                        continue;
+                    }
+
+                    bool own = recentHits.TryGetValue(death.Entity, out DateTime hitAt)
+                        && death.At - hitAt <= KillDamageWindow
+                        && death.At - hitAt >= TimeSpan.FromSeconds(-1);
+
+                    if (whitelist.Contains(id))
+                    {
+                        Write(new
+                        {
+                            type = "death",
+                            npcId = id,
+                            entityId = death.Entity,
+                            at = new DateTimeOffset(death.At).ToUnixTimeMilliseconds(),
+                            source = "hp",
+                        });
+                    }
+
+                    // Session mob kills: own-damage only (product default).
+                    if (own)
+                    {
+                        string? name = Aion2Npcs.NameOf(id, "en") ?? Aion2Npcs.NameOf(id, "ru");
+                        Write(new
+                        {
+                            type = "mob_kill",
+                            npcId = id,
+                            entityId = death.Entity,
+                            own = true,
+                            name,
+                            at = new DateTimeOffset(death.At).ToUnixTimeMilliseconds(),
+                        });
+                        if (verboseCalib)
+                        {
+                            Write(new
+                            {
+                                type = "calib",
+                                eventKind = "mob_kill",
+                                npcId = id,
+                                entityId = death.Entity,
+                                name,
+                                at = new DateTimeOffset(death.At).ToUnixTimeMilliseconds(),
+                            });
+                        }
+                    }
                 }
 
                 cursor = now.AddSeconds(-2);
@@ -286,6 +413,17 @@ internal static class Program
         }
 
         return 0;
+    }
+
+    /// <summary>True when the damage source is the local player or one of their summons.</summary>
+    private static bool IsOwnDamageSource(Aion2EntityDirectory entities, int sourceObjectId)
+    {
+        if (entities.IsLocalPlayer(sourceObjectId))
+        {
+            return true;
+        }
+
+        return entities.SummonOwnerOf(sourceObjectId) is int owner && entities.IsLocalPlayer(owner);
     }
 
     private static HashSet<int> LoadWhitelist()

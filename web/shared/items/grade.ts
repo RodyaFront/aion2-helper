@@ -14,6 +14,7 @@ export function normalizeItemGrade(raw: string | null | undefined): ItemGrade {
   const g = String(raw || '').trim().toLowerCase()
   if (!g) return 'unknown'
   if (g === 'common') return 'common'
+  if (g === 'uncommon') return 'rare' // green band in UI
   if (g === 'rare') return 'rare'
   if (g === 'special') return 'special'
   if (g === 'epic') return 'epic'

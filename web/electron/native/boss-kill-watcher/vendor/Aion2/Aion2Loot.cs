@@ -60,6 +60,12 @@ public static class Aion2Loot
     /// <summary>Raised (on the capturing thread) when a pickup was counted or the log was changed.</summary>
     public static event Action? Changed;
 
+    /// <summary>One confirmed ground→inventory pickup (item id, stack count, capture time, zone id).</summary>
+    public static event Action<int, long, DateTime, int>? PickedUp;
+
+    /// <summary>Raw local inventory change: kind 0 new / 1 stack+ / 2 gone, quantity as in the frame.</summary>
+    public static event Action<int, int, long, DateTime>? InventoryChanged;
+
     public static string StorePath => Path.Combine(Path.GetDirectoryName(Aion2CharacterStore.DefaultPath)!, "aion2-loot.json");
 
     /// <summary>The map the player is on (0 = not known yet).</summary>
@@ -265,6 +271,30 @@ public static class Aion2Loot
         }
     }
 
+    /// <summary>Emits <see cref="InventoryChanged"/> for every local inventory frame (including spends, kind 2).</summary>
+    public static void NoteInventoryDelta(ReadOnlySpan<byte> frame, DateTime at)
+    {
+        if (frame.Length < 21)
+        {
+            return;
+        }
+
+        int kind = frame[3];
+        if (kind > 2)
+        {
+            return;
+        }
+
+        int item = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[13..]));
+        long qty = BinaryPrimitives.ReadUInt32LittleEndian(frame[17..]);
+        if (item <= 0 || qty is <= 0 or > 1_000_000_000)
+        {
+            return;
+        }
+
+        InventoryChanged?.Invoke(item, kind, qty, at);
+    }
+
     // Under the lock.
     private static void Add(int item, long count, DateTime frameTime)
     {
@@ -300,6 +330,7 @@ public static class Aion2Loot
         entry.Last = now;
         _dirty = true;
         Save(force: false);
+        PickedUp?.Invoke(item, count, now, _zone);
     }
 
     // Under the lock; at most every 5 s unless forced, so a farming spree does not write the file for every item.

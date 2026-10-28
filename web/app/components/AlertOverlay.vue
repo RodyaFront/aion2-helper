@@ -4,14 +4,16 @@ import { formatCountdown } from '../../shared/bosses'
 import { useBossStore, type FieldSyncOfferEntry } from '../../stores/bosses'
 import { useRiftStore } from '../../stores/rift'
 
+const route = useRoute()
 const store = useBossStore()
 const rift = useRiftStore()
 
 const fieldSyncEntries = computed(() => store.pendingFieldSync?.entries ?? [])
-const fieldSyncCount = computed(() => fieldSyncEntries.value.length)
+/** Field-boss map sync is only actionable on the bosses page. */
+const showFieldSync = computed(() => route.path === '/' && fieldSyncEntries.value.length > 0)
 
 const hasToasts = computed(() =>
-  fieldSyncCount.value > 0 || Boolean(rift.toast) || store.toasts.length > 0,
+  showFieldSync.value || Boolean(rift.toast) || store.toasts.length > 0,
 )
 
 function fieldSyncStatus(entry: FieldSyncOfferEntry): string {
@@ -32,7 +34,7 @@ function fieldSyncStatus(entry: FieldSyncOfferEntry): string {
     />
     <div class="toast-stack" aria-live="assertive">
       <div
-        v-if="fieldSyncCount"
+        v-if="showFieldSync"
         class="toast is-field-sync field-sync-card"
         role="dialog"
         aria-labelledby="field-sync-title"

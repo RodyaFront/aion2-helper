@@ -88,7 +88,9 @@ function statePath(key) {
     ? 'tracker-settings.json'
     : key === 'favorites'
       ? 'tracker-favorites.json'
-      : 'tracker-state.json'
+      : key === 'sessions'
+        ? 'tracker-sessions.json'
+        : 'tracker-state.json'
   return path.join(app.getPath('userData'), name)
 }
 
@@ -319,9 +321,14 @@ async function createWindow() {
   }
 }
 
+function persistKey(key) {
+  if (key === 'settings' || key === 'favorites' || key === 'sessions') return key
+  return 'bosses'
+}
+
 ipcMain.handle('tracker:load-state', (_event, key) => {
   try {
-    const file = statePath(key === 'settings' || key === 'favorites' ? key : 'bosses')
+    const file = statePath(persistKey(key))
     if (!fs.existsSync(file)) return null
     return JSON.parse(fs.readFileSync(file, 'utf8'))
   }
@@ -332,7 +339,7 @@ ipcMain.handle('tracker:load-state', (_event, key) => {
 
 ipcMain.handle('tracker:save-state', (_event, key, data) => {
   try {
-    const file = statePath(key === 'settings' || key === 'favorites' ? key : 'bosses')
+    const file = statePath(persistKey(key))
     fs.mkdirSync(path.dirname(file), { recursive: true })
     // Re-serialize so Vue/Pinia proxies never reach disk half-written.
     fs.writeFileSync(file, JSON.stringify(data), 'utf8')
@@ -609,6 +616,16 @@ function startKillWatcher() {
           at: msg.at ?? Date.now(),
           entityId: msg.entityId,
         })
+      }
+      return
+    }
+    if (
+      msg.type === 'loot'
+      || msg.type === 'inventory'
+      || msg.type === 'mob_kill'
+    ) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('tracker:session-event', msg)
       }
       return
     }

@@ -51,6 +51,13 @@ contextBridge.exposeInMainWorld('aionTracker', {
     ipcRenderer.on('tracker:field-sync', listener)
     return () => ipcRenderer.removeListener('tracker:field-sync', listener)
   },
+  onSessionEvent(handler) {
+    const listener = (_event, payload) => {
+      handler(payload)
+    }
+    ipcRenderer.on('tracker:session-event', listener)
+    return () => ipcRenderer.removeListener('tracker:session-event', listener)
+  },
   onAutoKillStatus(handler) {
     const listener = (_event, payload) => {
       handler(payload)

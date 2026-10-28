@@ -1,4 +1,4 @@
-type PersistKey = 'bosses' | 'settings' | 'favorites'
+type PersistKey = 'bosses' | 'settings' | 'favorites' | 'sessions'
 
 type BossTimerRow = { respawnAt?: number | null }
 
@@ -15,6 +15,7 @@ type BossesPayload = {
 function localKey(key: PersistKey): string {
   if (key === 'bosses') return 'aion-boss-tracker-state-v1'
   if (key === 'favorites') return 'aion-boss-tracker-favorites-v1'
+  if (key === 'sessions') return 'aion-boss-tracker-sessions-v1'
   return 'aion-boss-tracker-settings-v1'
 }
 

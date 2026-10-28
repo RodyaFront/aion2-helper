@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Package, Settings, Swords, Timer } from '@lucide/vue'
+import { LayoutDashboard, Package, Settings, Swords, Timer } from '@lucide/vue'
 import {
   applyRaceDocumentTheme,
   RACE_ICON,
@@ -15,6 +15,7 @@ const settings = useSettingsStore()
 
 const nav = [
   { to: '/', label: 'Боссы', hint: 'Таймеры полевых боссов', icon: Timer },
+  { to: '/session', label: 'Сессия', hint: 'Кины, лут, киллы', icon: LayoutDashboard },
   { to: '/items', label: 'Предметы', hint: 'Дроп и карта', icon: Package },
   { to: '/monsters', label: 'Монстры', hint: 'Спаун и дроп', icon: Swords },
 ] as const

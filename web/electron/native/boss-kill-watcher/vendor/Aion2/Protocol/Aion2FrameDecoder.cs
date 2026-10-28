@@ -2035,6 +2035,7 @@ public sealed class Aion2FrameDecoder
         }
 
         Aion2Loot.NoteInventory(frame, timestamp);
+        Aion2Loot.NoteInventoryDelta(frame, timestamp);
         int itemId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[13..]));
         if (Aion2Pets.PetOfSoulItem(itemId) is int pet)
         {

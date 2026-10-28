@@ -1,0 +1,6 @@
+{
+  "kinahItemIds": [930100031, 930100001, 930100030],
+  "abyssPointsItemId": 930100003,
+  "source": "web/public/data/items-catalog.json (dbaion2)",
+  "notes": "Confirm with boss-kill-watcher calib + on-screen Kinah/AP deltas after a game patch."
+}
